@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+source $MISE_PROJECT_ROOT/lib/utils.sh
+
+if [[ ! -x ~/.local/bin/bash || $(~/.local/bin/bash -c 'echo ${BASH_VERSINFO[0]}') -lt 5 ]]; then
+    BASH_VER=$(curl -fsSL https://ftp.gnu.org/gnu/bash/ \
+        | grep -Eo 'bash-[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' \
+        | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' \
+        | sort -V | tail -1)
+    echo "Installing bash ${BASH_VER} for better completion support..."
+    work_in_temp_dir
+    run_quiet sh -c "curl -fsSL https://ftp.gnu.org/gnu/bash/bash-${BASH_VER}.tar.gz | tar -xz"
+    cd "bash-${BASH_VER}"
+    run_quiet ./configure --prefix="$HOME/.local"
+    run_quiet make
+    run_quiet make install
+fi
+
+PROFILE=$HOME/.bash_profile
+
+# Backup existing profile
+[[ -e "$PROFILE" ]] && mv "$PROFILE" "${PROFILE}.backup"
+
+cat > "$PROFILE" <<'PROFILE_EOF'
+case $- in
+  *i*) ;; # interactive shell only
+  *) return ;;
+esac
+
+stty start undef
+
+export HISTSIZE=100
+export HISTFILESIZE=100
+export LC_ALL=en_US.UTF-8
+export PATH=~/.local/bin:$PATH
+export EDITOR=vi
+
+eval "$(mise activate bash)"
+
+[[ -f ~/.local/share/bash-completion/bash_completion ]] && \
+    source ~/.local/share/bash-completion/bash_completion
+
+PROFILE_EOF
+
+# Embed DOTFILES path and source shell configs (resolved at setup time)
+echo "export DOTFILES=\"$MISE_PROJECT_ROOT\""              >> "$PROFILE"
+echo "source $MISE_PROJECT_ROOT/shell/dynamic_source_all"  >> "$PROFILE"
+
+# Symlink .bashrc → .bash_profile
+[[ -e ~/.bashrc ]] && mv ~/.bashrc{,.backup}
+ln -sf "$PROFILE" ~/.bashrc
+
+echo "Shell configured. Re-login or: source ~/.bash_profile"

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+source $MISE_PROJECT_ROOT/lib/utils.sh
+
+if ! command -v claude &>/dev/null; then
+    echo "Claude Code not installed, skipping"
+    exit 0
+fi
+
+CLAUDE_DIR="$HOME/.claude"
+mkdir -p "$CLAUDE_DIR/hooks"
+
+ln -sf "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$CLAUDE_DIR/settings.json"
+
+shopt -s nullglob dotglob
+for hook in "$MISE_PROJECT_ROOT/agents/claude/hooks/"*; do
+    [[ -f "$hook" ]] && ln -sf "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")"
+done

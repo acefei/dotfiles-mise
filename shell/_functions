@@ -102,7 +102,7 @@ ask()  # See 'killps' for example of use.
 
 _git_help()
 {
-    local doc="$HOME/.myprofile/docs/git-alias.md"
+    local doc="$DOTFILES/docs/git-alias.md"
     if [ -f "$doc" ]; then
         cat "$doc"
     else
@@ -139,15 +139,15 @@ remove_gone_branch() {
 }
 
 my_branchs() {
-	local all_branch_regex='\K.*'
-	local remote_branch_regex='origin/\K(?!HEAD).*'
-	#local regex=$all_branch_regex
-	local regex=$remote_branch_regex
-	local branchs=$(git for-each-ref --format='%(authorname) %(refname:short)' --sort=committerdate | grep -Po  "$(git config user.name) $regex")
+	local branchs=$(git for-each-ref --format='%(authorname) %(refname:short)' --sort=committerdate \
+		| grep "^$(git config user.name) origin/" \
+		| sed 's|.* origin/||' \
+		| grep -v '^HEAD$' \
+		| sed 's|^|origin/|')
 
 	updated_in_a_period() {
         local branch=$1
-        if ! echo $branch | grep -qP "^origin";then
+        if ! echo $branch | grep -q "^origin";then
            branch=origin/$branch
         fi
 		test -n "$(git log -1 --since '4 month ago' $branch)"
@@ -189,7 +189,7 @@ _prune_git_branchs() (
     fi
 
     set -e
-    git checkout $(git remote show origin | grep -Po "HEAD branch: \K.*")
+    git checkout $(git remote show origin | grep "HEAD branch:" | sed 's/.*HEAD branch: //')
 
     if [ -z "${branchs}" ] ;then
         git fetch -p && remove_gone_branch

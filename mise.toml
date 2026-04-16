@@ -1,0 +1,84 @@
+# ~/dotfiles/mise.toml
+
+# ── Tools ──────────────────────────────────────────────────────────────────────
+
+[tools]
+# Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
+go        = "latest"
+terraform = "latest"
+fzf       = "latest"
+gh        = "latest"
+ripgrep   = "latest"
+uv        = "latest"
+node      = "lts"
+usage     = "latest"  # required for mise completions
+
+# github: — GitHub releases, uses GitHub owner/repo with binary releases
+# Any repo at https://github.com/<owner>/<repo> with release binaries works
+"github:extrawurst/gitui"  = "latest"
+"github:mozilla/sops"      = "latest"
+"github:FiloSottile/age"   = "latest"
+"github:eljulians/skillfile" = "latest"
+
+# Other backends (not currently used):
+# asdf:<name>        — https://github.com/asdf-vm/asdf-plugins
+# aqua:<owner/repo>  — https://aquaproj.github.io/aqua-registry
+# go:<import/path>   — any `go install`-able package
+# npm:<name>         — https://npmjs.com
+# pipx:<name>        — https://pypi.org
+
+# ── Environment ────────────────────────────────────────────────────────────────
+
+[env]
+PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"
+EDITOR = "vi"
+
+# ── Bootstrap ──────────────────────────────────────────────────────────────────
+
+[tasks.bootstrap]
+description = "Set up complete development environment"
+depends     = [
+    "setup-bash",
+    "setup-completions",
+    "setup-git",
+    "setup-tmux",
+    "setup-vim",
+    "setup-utility",
+    "setup-vscode",
+    "setup-claude",
+]
+
+# ── Git ────────────────────────────────────────────────────────────────────────
+
+[tasks.setup-git]
+description = "Symlink git config files"
+run = [
+    "ln -sf $MISE_PROJECT_ROOT/config/git/gitconfig ~/.gitconfig",
+    "ln -sf $MISE_PROJECT_ROOT/config/git/gitignore_global ~/.gitignore_global",
+]
+
+# ── Tmux ───────────────────────────────────────────────────────────────────────
+
+[tasks.setup-tmux]
+description = "Symlink tmux config"
+run = "ln -sf $MISE_PROJECT_ROOT/config/tmux/tmux.conf ~/.tmux.conf"
+
+# ── Vim ────────────────────────────────────────────────────────────────────────
+
+[tasks.setup-vim]
+description = "Symlink vimrc and install plugins"
+run = [
+    "ln -sf $MISE_PROJECT_ROOT/config/vim/vimrc ~/.vimrc",
+    "$MISE_PROJECT_ROOT/config/vim/plug_installer",
+]
+
+# ── Utility scripts ────────────────────────────────────────────────────────────
+
+[tasks.setup-utility]
+description = "Symlink utility scripts to ~/.local/bin"
+run = """
+mkdir -p ~/.local/bin
+for cmd in $MISE_PROJECT_ROOT/utility/*; do
+    ln -sf "$cmd" ~/.local/bin/$(basename "$cmd")
+done
+"""
