@@ -4,28 +4,21 @@
 
 [tools]
 # Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
-go        = "latest"
-terraform = "latest"
 fzf       = "latest"
 gh        = "latest"
-ripgrep   = "latest"
-uv        = "latest"
+go        = "latest"
 node      = "lts"
+ripgrep   = "latest"
+rust      = "stable"
+terraform = "latest"
 usage     = "latest"  # required for mise completions
+uv        = "latest"
 
 # github: — GitHub releases, uses GitHub owner/repo with binary releases
-# Any repo at https://github.com/<owner>/<repo> with release binaries works
-"github:extrawurst/gitui"  = "latest"
-"github:mozilla/sops"      = "latest"
-"github:FiloSottile/age"   = "latest"
+# https://mise.jdx.dev/dev-tools/backends/github.html
+# mise auto-detects the right asset for the current OS/arch.
 "github:eljulians/skillfile" = "latest"
-
-# Other backends (not currently used):
-# asdf:<name>        — https://github.com/asdf-vm/asdf-plugins
-# aqua:<owner/repo>  — https://aquaproj.github.io/aqua-registry
-# go:<import/path>   — any `go install`-able package
-# npm:<name>         — https://npmjs.com
-# pipx:<name>        — https://pypi.org
+"github:extrawurst/gitui"    = "latest"
 
 # ── Environment ────────────────────────────────────────────────────────────────
 
@@ -44,8 +37,7 @@ depends     = [
     "setup-tmux",
     "setup-vim",
     "setup-utility",
-    "setup-vscode",
-    "setup-claude",
+    "setup-agents",
 ]
 
 # ── Git ────────────────────────────────────────────────────────────────────────

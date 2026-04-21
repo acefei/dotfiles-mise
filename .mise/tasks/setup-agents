@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+setup_vscode() {
+    if ! command -v code &>/dev/null; then
+        echo "VSCode not installed, skipping"
+        return 0
+    fi
+
+    local vscode_dir
+    if is_mac; then
+        vscode_dir="$HOME/Library/Application Support/Code/User"
+    else
+        vscode_dir="$HOME/.config/Code/User"
+    fi
+
+    mkdir -p "$vscode_dir"
+    ln -sf "$MISE_PROJECT_ROOT/agents/vscode/settings.json" "$vscode_dir/settings.json"
+    ln -sf "$MISE_PROJECT_ROOT/agents/vscode/keybindings.json" "$vscode_dir/keybindings.json"
+
+    while IFS= read -r ext; do
+        [[ "$ext" =~ ^#|^$ ]] && continue
+        code --install-extension "$ext" --force
+    done < "$MISE_PROJECT_ROOT/agents/vscode/extensions.txt"
+}
+
+setup_claude() {
+    if ! command -v claude &>/dev/null; then
+        echo "Claude Code not installed, skipping"
+        return 0
+    fi
+
+    local claude_dir="$HOME/.claude"
+    mkdir -p "$claude_dir/hooks"
+
+    ln -sf "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
+
+    shopt -s nullglob dotglob
+    for hook in "$MISE_PROJECT_ROOT/agents/claude/hooks/"*; do
+        [[ -f "$hook" ]] && ln -sf "$hook" "$claude_dir/hooks/$(basename "$hook")"
+    done
+}
+
+setup_skillfile() {
+    if ! command -v skillfile &>/dev/null; then
+        echo "skillfile not installed, skipping"
+        return 0
+    fi
+
+    if [[ ! -f "$MISE_PROJECT_ROOT/Skillfile" ]]; then
+        echo "Skillfile not found, skipping"
+        return 0
+    fi
+
+    cd "$MISE_PROJECT_ROOT" || return 1
+    skillfile validate
+    skillfile install
+}
+
+setup_vscode
+setup_claude
+setup_skillfile

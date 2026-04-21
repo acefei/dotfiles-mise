@@ -33,3 +33,4 @@ download "https://raw.githubusercontent.com/git/git/v${GIT_VERSION}/contrib/comp
 fzf --bash            > ~/.local/share/bash-completion/completions/fzf
 mise completion bash  > ~/.local/share/bash-completion/completions/mise
 gh completion -s bash > ~/.local/share/bash-completion/completions/gh
+skillfile completions bash > ~/.local/share/bash-completion/completions/skillfile

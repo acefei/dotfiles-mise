@@ -1,3 +1,12 @@
 .*.swp
 .install.err
 test.env
+
+# skillfile
+.skillfile/cache/
+.skillfile/conflict
+
+# Keep CI workflows trackable even if global gitignore ignores .github/
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
