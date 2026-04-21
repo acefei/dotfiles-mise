@@ -51,10 +51,16 @@ ln -sf "$DOTFILES_DIR/mise.toml" "$HOME/.config/mise/config.toml"
 cd "$DOTFILES_DIR"
 mise trust -y -a
 
-# ── 5. Install all tools declared in mise.toml ─────────────────────────────
+# ── 5. Normalize mise task permissions ──────────────────────────────────────
+if [ -d "$DOTFILES_DIR/.mise/tasks" ]; then
+    chmod 755 "$DOTFILES_DIR/.mise/tasks"
+    find "$DOTFILES_DIR/.mise/tasks" -type f -exec chmod 755 {} +
+fi
+
+# ── 6. Install all tools declared in mise.toml ──────────────────────────────
 echo "Installing tools..."
 mise install
 
-# ── 6. Run the full bootstrap task ─────────────────────────────────────────
+# ── 7. Run the full bootstrap task ──────────────────────────────────────────
 echo "Running bootstrap..."
 mise run bootstrap

@@ -1,0 +1,62 @@
+{
+  "github/skill/brainstorming": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/brainstorming?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/dispatching-parallel-agents": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/dispatching-parallel-agents?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/executing-plans": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/executing-plans?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/finishing-a-development-branch": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/finishing-a-development-branch?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/karpathy-guidelines": {
+    "sha": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+    "raw_url": "https://api.github.com/repos/forrestchang/andrej-karpathy-skills/contents/skills/karpathy-guidelines?ref=2c606141936f1eeef17fa3043a72095b4765b9c2"
+  },
+  "github/skill/receiving-code-review": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/receiving-code-review?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/requesting-code-review": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/requesting-code-review?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/subagent-driven-development": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/subagent-driven-development?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/systematic-debugging": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/systematic-debugging?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/test-driven-development": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/test-driven-development?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/using-git-worktrees": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/using-git-worktrees?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/using-superpowers": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/using-superpowers?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/verification-before-completion": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/verification-before-completion?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/writing-plans": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/writing-plans?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  },
+  "github/skill/writing-skills": {
+    "sha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "raw_url": "https://api.github.com/repos/obra/superpowers/contents/skills/writing-skills?ref=b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+  }
+}

@@ -4,21 +4,24 @@
 
 [tools]
 # Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
-go        = "latest"
-terraform = "latest"
 fzf       = "latest"
 gh        = "latest"
-ripgrep   = "latest"
-uv        = "latest"
+go        = "latest"
 node      = "lts"
+ripgrep   = "latest"
+rust      = "stable"
+terraform = "latest"
 usage     = "latest"  # required for mise completions
+uv        = "latest"
+
+# cargo: — Build from source with Cargo on the local machine
+"cargo:skillfile"          = "latest"
 
 # github: — GitHub releases, uses GitHub owner/repo with binary releases
 # Any repo at https://github.com/<owner>/<repo> with release binaries works
 "github:extrawurst/gitui"  = "latest"
-"github:mozilla/sops"      = "latest"
 "github:FiloSottile/age"   = "latest"
-"github:eljulians/skillfile" = "latest"
+"github:mozilla/sops"      = "latest"
 
 # Other backends (not currently used):
 # asdf:<name>        — https://github.com/asdf-vm/asdf-plugins
@@ -44,8 +47,7 @@ depends     = [
     "setup-tmux",
     "setup-vim",
     "setup-utility",
-    "setup-vscode",
-    "setup-claude",
+    "setup-agents",
 ]
 
 # ── Git ────────────────────────────────────────────────────────────────────────

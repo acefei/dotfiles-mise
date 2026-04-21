@@ -1,5 +1,7 @@
 # dotfiles
 
+[![Installation on Various OS](https://github.com/acefei/dotfiles-mise/actions/workflows/test-install.yml/badge.svg?branch=main)](https://github.com/acefei/dotfiles-mise/actions/workflows/test-install.yml)
+
 Personal development environment for Linux and macOS, managed by [mise](https://mise.jdx.dev). Rootless - nothing requires sudo.
 
 ## Quick start
@@ -73,13 +75,14 @@ Tasks with OS detection, loops, or multiple steps go in `.mise/tasks/setup-foo` 
 
 ```bash
 mise run setup-git
-mise run setup-vscode
+mise run setup-agents
 mise run bootstrap          # runs all tasks
 ```
 
 ## AI agent settings
 
-- **Claude Code**: settings and hooks live in `agents/claude/`. The `setup-claude` task symlinks them to `~/.claude/`.
-- **VSCode**: settings, keybindings, and extension list live in `agents/vscode/`. The `setup-vscode` task symlinks them and installs extensions.
-- **skillfile**: Install `skillfile` from `github:eljulians/skillfile` (already in `mise.toml`). Configure a `Skillfile` in this repo to manage AI skills across agents.
+- **Unified agents setup**: the `setup-agents` task configures agent-related tooling in one stage.
+- **Claude Code**: settings and hooks live in `agents/claude/` and are symlinked to `~/.claude/` by `setup-agents`.
+- **VSCode**: settings, keybindings, and extension list live in `agents/vscode/` and are applied by `setup-agents`.
+- **skillfile**: Install `skillfile` from `cargo:skillfile` (already in `mise.toml`) so it is built from source on the local machine. If `Skillfile` exists, `setup-agents` validates and installs the declared skills.
 
