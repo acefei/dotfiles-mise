@@ -1,0 +1,25 @@
+# install  <platform>  <scope>
+install  claude-code  global
+install  copilot  global
+
+# --- Skills ---
+# github  skill  [name]  <owner/repo>  <path-or-dir>  [ref]
+github  skill  forrestchang/andrej-karpathy-skills  skills/karpathy-guidelines
+
+github  skill  obra/superpowers  skills/brainstorming
+github  skill  obra/superpowers  skills/dispatching-parallel-agents
+github  skill  obra/superpowers  skills/executing-plans
+github  skill  obra/superpowers  skills/finishing-a-development-branch
+github  skill  obra/superpowers  skills/receiving-code-review
+github  skill  obra/superpowers  skills/requesting-code-review
+github  skill  obra/superpowers  skills/subagent-driven-development
+github  skill  obra/superpowers  skills/systematic-debugging
+github  skill  obra/superpowers  skills/test-driven-development
+github  skill  obra/superpowers  skills/using-git-worktrees
+github  skill  obra/superpowers  skills/using-superpowers
+github  skill  obra/superpowers  skills/verification-before-completion
+github  skill  obra/superpowers  skills/writing-plans
+github  skill  obra/superpowers  skills/writing-skills
+
+# local skill  [name]  <path-or-dir>
+local  skill  skills/using-skillfile/SKILL.md

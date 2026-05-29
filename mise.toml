@@ -1,0 +1,79 @@
+# ~/dotfiles/mise.toml
+
+# ── Tools ──────────────────────────────────────────────────────────────────────
+
+[tools]
+# Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
+fzf       = "latest"
+gh        = "latest"
+go        = "latest"
+node      = "lts"
+ripgrep   = "latest"
+rust      = "stable"
+terraform = "latest"
+usage     = "latest"  # required for mise completions
+uv        = "latest"
+
+# github: — GitHub releases, uses GitHub owner/repo with binary releases
+# https://mise.jdx.dev/dev-tools/backends/github.html
+# mise auto-detects the right asset for the current OS/arch.
+"github:eljulians/skillfile" = "latest"
+"github:extrawurst/gitui"    = "latest"
+
+# ── Environment ────────────────────────────────────────────────────────────────
+
+[env]
+PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"
+EDITOR = "vi"
+
+# ── Bootstrap ──────────────────────────────────────────────────────────────────
+
+[tasks.bootstrap]
+description = "Set up complete development environment"
+depends     = [
+    "setup-bash",
+    "setup-completions",
+    "setup-git",
+    "setup-tmux",
+    "setup-vim",
+    "setup-utility",
+    "setup-agents",
+]
+
+# ── Git ────────────────────────────────────────────────────────────────────────
+
+[tasks.setup-git]
+description = "Install git config files"
+run = [
+    "install -m 644 $MISE_PROJECT_ROOT/config/git/gitconfig $HOME/.gitconfig",
+    "install -m 644 $MISE_PROJECT_ROOT/config/git/gitignore_global $HOME/.gitignore_global",
+]
+
+# ── Tmux ───────────────────────────────────────────────────────────────────────
+
+[tasks.setup-tmux]
+description = "Install tmux config and tpm plugins"
+run = [
+    "install -m 644 $MISE_PROJECT_ROOT/config/tmux/tmux.conf $HOME/.tmux.conf",
+    "$MISE_PROJECT_ROOT/config/tmux/tpm_installer",
+]
+
+# ── Vim ────────────────────────────────────────────────────────────────────────
+
+[tasks.setup-vim]
+description = "Install vimrc and install plugins"
+run = [
+    "install -m 644 $MISE_PROJECT_ROOT/config/vim/vimrc $HOME/.vimrc",
+    "$MISE_PROJECT_ROOT/config/vim/plug_installer",
+]
+
+# ── Utility scripts ────────────────────────────────────────────────────────────
+
+[tasks.setup-utility]
+description = "Install utility scripts to ~/.local/bin"
+run = """
+install -d ~/.local/bin
+for cmd in $MISE_PROJECT_ROOT/utility/*; do
+    install -m 755 "$cmd" "$HOME/.local/bin/$(basename "$cmd")"
+done
+"""

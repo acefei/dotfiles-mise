@@ -1,0 +1,7 @@
+for rc in ~/.git-*
+do
+    if echo $rc | grep ".git-credentials" > /dev/null;then
+        continue
+    fi
+    source $rc
+done
