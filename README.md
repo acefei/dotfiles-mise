@@ -82,7 +82,6 @@ mise run bootstrap          # runs all tasks
 ## AI agent settings
 
 - **Unified agents setup**: the `setup-agents` task configures agent-related tooling in one stage.
-- **Claude Code**: settings and hooks live in `agents/claude/` and are symlinked to `~/.claude/` by `setup-agents`.
+- **Claude Code**: `setup-agents` installs the Claude Code CLI (if missing), symlinks settings and hooks from `agents/claude/` to `~/.claude/`, then registers the [ECC](https://github.com/affaan-m/ECC) ("everything claude code") marketplace and installs the `ecc` plugin.
 - **VSCode**: settings, keybindings, and extension list live in `agents/vscode/` and are applied by `setup-agents`.
-- **skillfile**: Install `skillfile` from `cargo:skillfile` (already in `mise.toml`) so it is built from source on the local machine. If `Skillfile` exists, `setup-agents` validates and installs the declared skills.
 

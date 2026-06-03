@@ -17,8 +17,11 @@ uv        = "latest"
 # github: — GitHub releases, uses GitHub owner/repo with binary releases
 # https://mise.jdx.dev/dev-tools/backends/github.html
 # mise auto-detects the right asset for the current OS/arch.
-"github:eljulians/skillfile" = "latest"
-"github:extrawurst/gitui"    = "latest"
+"github:extrawurst/gitui" = "latest"
+
+# npm: — global npm packages, managed by mise (requires node above)
+# https://mise.jdx.dev/dev-tools/backends/npm.html
+"npm:@anthropic-ai/claude-code" = "latest"
 
 # ── Environment ────────────────────────────────────────────────────────────────
 
@@ -45,8 +48,8 @@ depends     = [
 [tasks.setup-git]
 description = "Install git config files"
 run = [
-    "install -m 644 $MISE_PROJECT_ROOT/config/git/gitconfig $HOME/.gitconfig",
-    "install -m 644 $MISE_PROJECT_ROOT/config/git/gitignore_global $HOME/.gitignore_global",
+    "rm -f $HOME/.gitconfig && install -m 644 $MISE_PROJECT_ROOT/config/git/gitconfig $HOME/.gitconfig",
+    "rm -f $HOME/.gitignore_global && install -m 644 $MISE_PROJECT_ROOT/config/git/gitignore_global $HOME/.gitignore_global",
 ]
 
 # ── Tmux ───────────────────────────────────────────────────────────────────────
@@ -54,7 +57,7 @@ run = [
 [tasks.setup-tmux]
 description = "Install tmux config and tpm plugins"
 run = [
-    "install -m 644 $MISE_PROJECT_ROOT/config/tmux/tmux.conf $HOME/.tmux.conf",
+    "rm -f $HOME/.tmux.conf && install -m 644 $MISE_PROJECT_ROOT/config/tmux/tmux.conf $HOME/.tmux.conf",
     "$MISE_PROJECT_ROOT/config/tmux/tpm_installer",
 ]
 
@@ -63,7 +66,7 @@ run = [
 [tasks.setup-vim]
 description = "Install vimrc and install plugins"
 run = [
-    "install -m 644 $MISE_PROJECT_ROOT/config/vim/vimrc $HOME/.vimrc",
+    "rm -f $HOME/.vimrc && install -m 644 $MISE_PROJECT_ROOT/config/vim/vimrc $HOME/.vimrc",
     "$MISE_PROJECT_ROOT/config/vim/plug_installer",
 ]
 
@@ -74,6 +77,8 @@ description = "Install utility scripts to ~/.local/bin"
 run = """
 install -d ~/.local/bin
 for cmd in $MISE_PROJECT_ROOT/utility/*; do
-    install -m 755 "$cmd" "$HOME/.local/bin/$(basename "$cmd")"
+    dest="$HOME/.local/bin/$(basename "$cmd")"
+    rm -f "$dest"
+    install -m 755 "$cmd" "$dest"
 done
 """
