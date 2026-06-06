@@ -36,6 +36,13 @@ CLAUDE_PLUGINS=(
     "ecc@ecc"
 )
 
+# Agent skill packs to install via the `skills` CLI (npx skills add).
+# These are plain SKILL.md files — no build step, unlike installing the full repo.
+#   format: "<source>"  (GitHub owner/repo, git URL, or local path)
+CLAUDE_SKILLS=(
+    "mattpocock/skills"   # https://github.com/mattpocock/skills
+)
+
 setup_claude() {
     if ! command -v claude &>/dev/null; then
         echo "Claude Code CLI not available (managed by mise), skipping Claude setup"
@@ -70,6 +77,16 @@ setup_claude() {
         claude plugin install "$plugin" \
             || echo "Plugin install failed for $plugin, continuing"
     done
+
+    if [[ ${#CLAUDE_SKILLS[@]} -gt 0 ]] && command -v npx &>/dev/null; then
+        local skill_source
+        for skill_source in "${CLAUDE_SKILLS[@]}"; do
+            echo "Installing Claude skill pack: $skill_source"
+            # Copy all skills globally to Claude Code, non-interactively.
+            npx -y skills add "$skill_source" --skill '*' --global --agent claude-code --copy --yes \
+                || echo "Skill install failed for $skill_source, continuing"
+        done
+    fi
 }
 
 setup_vscode
