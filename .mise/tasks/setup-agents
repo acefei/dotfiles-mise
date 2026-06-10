@@ -28,12 +28,14 @@ setup_vscode() {
 #   format: "<marketplace-source>"  (GitHub owner/repo, git URL, or local path)
 CLAUDE_MARKETPLACES=(
     "affaan-m/ECC"   # ECC = "everything claude code" (https://github.com/affaan-m/ECC)
+    "acefei/agent-accelerator"   # https://github.com/acefei/agent-accelerator
 )
 
 # Claude Code plugins to install.
 #   format: "<plugin>@<marketplace-name>"
 CLAUDE_PLUGINS=(
     "ecc@ecc"
+    "accelerator-core@agent-accelerator"
 )
 
 # Agent skill packs to install via the `skills` CLI (npx skills add).
