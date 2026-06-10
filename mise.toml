@@ -7,6 +7,7 @@
 fzf       = "latest"
 gh        = "latest"
 go        = "latest"
+jq        = "latest"  # JSON processor; used by the speak-aloud plugin's Stop hook
 node      = "lts"
 ripgrep   = "latest"
 rust      = "stable"
