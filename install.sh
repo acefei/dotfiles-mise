@@ -175,6 +175,15 @@ run_bootstrap() {
     mise run bootstrap
 }
 
+ensure_gh_latest() {
+    # `gh skill` is a preview command whose flags vary by version; recent gh
+    # builds need `--all` to install every skill non-interactively. mise pins
+    # gh="latest", but `mise install` won't bump an already-installed "latest",
+    # so upgrade explicitly here to keep skill installation version-agnostic.
+    echo "Ensuring gh is on the latest release..."
+    mise upgrade gh >/dev/null 2>&1 || mise install gh >/dev/null 2>&1 || true
+}
+
 # ── Flows ───────────────────────────────────────────────────────────────────
 do_bootstrap() {
     require_build_tools
@@ -185,6 +194,7 @@ do_bootstrap() {
     normalize_task_perms
     ensure_github_token
     install_tools
+    ensure_gh_latest
     run_bootstrap
 }
 
@@ -194,6 +204,7 @@ do_update() {
     pull_latest
     trust_repo
     normalize_task_perms
+    ensure_gh_latest
     run_bootstrap
 }
 

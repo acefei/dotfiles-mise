@@ -84,17 +84,12 @@ setup_claude() {
     done
 
     if [[ ${#CLAUDE_SKILLS[@]} -gt 0 ]] && command -v gh &>/dev/null; then
-        # `gh skill` is preview and its flags vary by version: newer builds need
-        # --all to install every skill non-interactively, older builds lack the
-        # flag (and install all by default). Detect support and adapt so bootstrap
-        # works across machines with different gh versions.
-        local all_flag=()
-        gh skill install --help 2>&1 | grep -q -- '--all' && all_flag=(--all)
         local skill_source
         for skill_source in "${CLAUDE_SKILLS[@]}"; do
             echo "Installing Claude skill pack: $skill_source"
-            # Install into Claude Code, user-global, overwrite without prompting.
-            gh skill install "$skill_source" "${all_flag[@]}" --agent claude-code --scope user --force \
+            # Install all skills into Claude Code, user-global, non-interactively.
+            # `--all` requires a recent gh; install.sh keeps gh on the latest release.
+            gh skill install "$skill_source" --all --agent claude-code --scope user --force \
                 || echo "Skill install failed for $skill_source, continuing"
         done
     fi
