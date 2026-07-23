@@ -64,6 +64,14 @@ setup_claude() {
         install -m 644 "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
     fi
 
+    # Global CLAUDE.md (personal always-on instructions) — symlink so repo edits
+    # propagate. Don't clobber a real (non-symlink) CLAUDE.md a machine already has.
+    if [[ -e "$claude_dir/CLAUDE.md" && ! -L "$claude_dir/CLAUDE.md" ]]; then
+        echo "Claude CLAUDE.md already exists (not a symlink), keeping current $claude_dir/CLAUDE.md"
+    else
+        ln -sfn "$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$claude_dir/CLAUDE.md"
+    fi
+
     local marketplace plugin marketplace_name
 
     for marketplace in "${CLAUDE_MARKETPLACES[@]}"; do
