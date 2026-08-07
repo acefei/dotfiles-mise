@@ -38,41 +38,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu-22.04
-            container_image: ubuntu:22.04
-            pre_checkout_cmd: |
-              apt-get update
-              apt-get install -y git curl ca-certificates
-            build_deps_cmd: |
-              apt-get update
-              apt-get install -y build-essential pkg-config libssl-dev xz-utils
-          - name: ubuntu-24.04
-            container_image: ubuntu:24.04
-            pre_checkout_cmd: |
-              apt-get update
-              apt-get install -y git curl ca-certificates
-            build_deps_cmd: |
-              apt-get update
-              apt-get install -y build-essential pkg-config libssl-dev xz-utils
-          - name: fedora-41
-            container_image: fedora:41
-            pre_checkout_cmd: |
-              dnf -y update
-              dnf -y install git curl ca-certificates
-            build_deps_cmd: |
-              dnf -y install gcc make pkgconf-pkg-config openssl-devel xz tar findutils which
+          - { name: ubuntu-22.04, container_image: "ubuntu:22.04", family: debian }
+          - { name: ubuntu-24.04, container_image: "ubuntu:24.04", family: debian }
+          - { name: fedora-41,    container_image: "fedora:41",    family: fedora }
 
     steps:
-      - name: Install base dependencies
+      # Everything install.sh needs, plus git/curl for the checkout that follows.
+      - name: Install dependencies
         run: |
-          ${{ matrix.pre_checkout_cmd }}
+          if [ "${{ matrix.family }}" = debian ]; then
+              apt-get update
+              apt-get install -y git curl ca-certificates \
+                  build-essential pkg-config libssl-dev xz-utils
+          else
+              dnf -y install git curl ca-certificates \
+                  gcc make pkgconf-pkg-config openssl-devel xz tar findutils which
+          fi
 
       - name: Checkout
         uses: actions/checkout@v5
-
-      - name: Install system dependencies
-        run: |
-          ${{ matrix.build_deps_cmd }}
 
       - name: Run install script
         env:

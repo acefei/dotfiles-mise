@@ -10,15 +10,17 @@ alias wtl='git worktree list'
 alias wtm='cd $(git worktree list | head -1 | cut -d" " -f1)'
 # Prune stale worktree entries
 alias wtp='git worktree prune -v'
-_wt_help() {
-    local doc="$HOME/.myprofile/docs/git-worktree.md"
-    if [ -f "$doc" ]; then
-        cat "$doc"
-    else
-        echo "Doc not found: $doc"
-    fi
+alias wt-help='_dotfiles_doc git-worktree.md'
+
+# Absolute path of the repo this worktree belongs to.
+_wt_repo_root() {
+    local common_dir
+    common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || {
+        echo "Not a git repository." >&2
+        return 1
+    }
+    (cd "$common_dir/.." && pwd -P)
 }
-alias wt-help='_wt_help'
 
 # ============================================================================
 # Worktree Management Functions
@@ -30,11 +32,7 @@ _wt_create() {
     local repo_root path base target_commit reply
     
     # Resolve git repo root
-    repo_root=$(git rev-parse --git-common-dir 2>/dev/null) || {
-        echo "Not a git repository."
-        return 1
-    }
-    repo_root=$(cd "$repo_root/.." && pwd -P)
+    repo_root=$(_wt_repo_root) || return 1
     path=${2:-"$repo_root/.git-worktree/$branch"}
     mkdir -p "$(dirname "$path")"
     
@@ -77,8 +75,7 @@ _wt_remove_interactive() {
     
     [ -z "$worktrees" ] && { echo "No selection."; return 0; }
     
-    repo_root=$(git rev-parse --git-common-dir 2>/dev/null) || return 1
-    repo_root=$(cd "$repo_root/.." && pwd -P)
+    repo_root=$(_wt_repo_root) || return 1
     cd "$repo_root" || return 1
     
     echo "Removing $(echo "$worktrees" | wc -l) worktree(s)..."
@@ -93,8 +90,7 @@ _wt_remove() {
     local path=$1 force_flag repo_root path_abs
     local force_flag=$([ "$2" = "-f" ] || [ "$2" = "--force" ] && echo "--force" || echo "")
     
-    repo_root=$(git rev-parse --git-common-dir 2>/dev/null) || return 1
-    repo_root=$(cd "$repo_root/.." && pwd -P)
+    repo_root=$(_wt_repo_root) || return 1
     path_abs=$([[ "$path" = /* ]] && echo "$path" || echo "$(pwd -P)/$path")
     
     echo "Removing: $path_abs"

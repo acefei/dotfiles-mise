@@ -114,8 +114,10 @@ pull_latest() {
 }
 
 link_global_mise_config() {
+    # Tools only — never mise.toml, which holds this repo's tasks. mise sets
+    # MISE_PROJECT_ROOT to $HOME for whichever config it loads globally.
     mkdir -p "$HOME/.config/mise"
-    ln -sf "$DOTFILES_DIR/mise.toml" "$HOME/.config/mise/config.toml"
+    ln -sf "$DOTFILES_DIR/config/mise/tools.toml" "$HOME/.config/mise/config.toml"
 }
 
 trust_repo() {
@@ -175,45 +177,30 @@ run_bootstrap() {
     mise run bootstrap
 }
 
-ensure_gh_latest() {
-    # `gh skill` is a preview command whose flags vary by version; recent gh
-    # builds need `--all` to install every skill non-interactively. mise pins
-    # gh="latest", but `mise install` won't bump an already-installed "latest",
-    # so upgrade explicitly here to keep skill installation version-agnostic.
-    echo "Ensuring gh is on the latest release..."
-    mise upgrade gh >/dev/null 2>&1 || mise install gh >/dev/null 2>&1 || true
-}
-
-# ── Flows ───────────────────────────────────────────────────────────────────
-do_bootstrap() {
-    require_build_tools
+# ── Flow ────────────────────────────────────────────────────────────────────
+# One pipeline. --update pulls first and skips the fresh-machine-only steps.
+run_install() {
+    if [ "$MODE" = bootstrap ]; then
+        require_build_tools
+    fi
     install_mise
     resolve_dotfiles_dir
+    if [ "$MODE" = update ]; then
+        pull_latest
+    fi
     link_global_mise_config
     trust_repo
     normalize_task_perms
-    ensure_github_token
-    install_tools
-    ensure_gh_latest
-    run_bootstrap
-}
-
-do_update() {
-    install_mise
-    resolve_dotfiles_dir
-    pull_latest
-    trust_repo
-    normalize_task_perms
-    ensure_gh_latest
+    if [ "$MODE" = bootstrap ]; then
+        ensure_github_token
+        install_tools
+    fi
     run_bootstrap
 }
 
 main() {
     parse_args "$@"
-    case "$MODE" in
-        update)    do_update ;;
-        bootstrap) do_bootstrap ;;
-    esac
+    run_install
 }
 
 main "$@"

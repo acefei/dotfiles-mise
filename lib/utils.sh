@@ -34,10 +34,3 @@ work_in_temp_dir() {
     cd "$tempdir"
     trap 'rm -rf "$tempdir"' EXIT
 }
-
-restore_backup() {
-    local file=$1
-    if [[ -e "${file}.backup" ]]; then
-        mv "${file}.backup" "$file"
-    fi
-}

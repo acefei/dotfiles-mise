@@ -27,6 +27,7 @@ dotfiles/
 │   ├── _prompt
 │   └── _worktree
 ├── config/
+│   ├── mise/tools.toml     # Tools + env, linked to ~/.config/mise/config.toml
 │   ├── git/                # gitconfig, gitignore_global
 │   ├── tmux/               # tmux.conf
 │   └── vim/                # vimrc, plug_installer
@@ -36,8 +37,11 @@ dotfiles/
 ├── utility/                # Scripts symlinked to ~/.local/bin
 ├── templates/              # Cloud-init and Docker starter files
 ├── docs/                   # Reference docs (git aliases, fzf, worktrees, skill workflow)
-└── .mise/tasks/            # Complex setup scripts (OS detection, loops, etc.)
+└── .mise/tasks/            # One executable script per setup-* task
 ```
+
+Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
+(tools available in every directory), `mise.toml` holds this repo's **tasks**.
 
 ## Philosophy
 
@@ -49,40 +53,44 @@ dotfiles/
 
 ## Adding a tool
 
-Add one line to `mise.toml` under `[tools]`:
+Add one line to `config/mise/tools.toml` under `[tools]`, then `mise install`:
 
 ```toml
 [tools]
 ripgrep = "latest"                    # built-in (mise registry)
 "github:owner/repo" = "latest"        # any GitHub release binary
+"npm:some-cli" = "latest"             # global npm package
 ```
-
-Then run `mise install`.
 
 ## Adding a task
 
-Simple one-liners go inline in `mise.toml`:
-
-```toml
-[tasks.setup-foo]
-description = "Symlink foo config"
-run = "ln -sf $MISE_PROJECT_ROOT/config/foo/foo.conf ~/.foo.conf"
-```
-
-Tasks with OS detection, loops, or multiple steps go in `.mise/tasks/setup-foo` (executable script, no extension). Add the task name to the `depends` list under `[tasks.bootstrap]`.
-
-## Running individual tasks
+Write an executable script at `.mise/tasks/setup-foo` (no extension) and add
+`"setup-foo"` to the `depends` list in `mise.toml`:
 
 ```bash
-mise run setup-git
-mise run setup-agents
-mise run bootstrap          # runs all tasks
+#!/usr/bin/env bash
+#MISE description="Install foo config"
+set -euo pipefail
+
+install -m 644 "$MISE_PROJECT_ROOT/config/foo/foo.conf" "$HOME/.foo.conf"
+```
+
+`$MISE_PROJECT_ROOT` is this repo. Make it safe to re-run — `mise run bootstrap`
+runs every task, and you should be able to run it any time.
+
+## Running tasks
+
+```bash
+mise tasks                  # what's available
+mise run setup-git          # just one
+mise run bootstrap          # all of them, in parallel
 ```
 
 ## AI agent settings
 
-- **Unified agents setup**: the `setup-agents` task configures agent-related tooling in one stage.
-- **Claude Code**: `setup-agents` installs the Claude Code CLI (if missing), symlinks settings and hooks from `agents/claude/` to `~/.claude/`, then registers the [ECC](https://github.com/affaan-m/ECC) ("everything claude code") and [agent-accelerator](https://github.com/acefei/agent-accelerator) marketplaces and installs the plugins listed in `CLAUDE_PLUGINS`.
-- **Agent skills**: the [mattpocock-skills](https://github.com/mattpocock/skills) pack is installed as a **plugin** from Claude Code's built-in marketplace. See **[docs/claude-skill-workflow.md](docs/claude-skill-workflow.md)** for the idea → spec → tickets → implementation pipeline it provides. Install it by exactly one route — plugin *or* `gh skill` — never both, or every skill lands twice.
-- **VSCode**: settings, keybindings, and extension list live in `agents/vscode/` and are applied by `setup-agents`.
+`mise run setup-agents` sets up Claude Code and VSCode together.
+
+- **Claude Code** — settings and hooks from `agents/claude/` are linked into `~/.claude/`. To change which marketplaces, plugins, or skill packs you get, edit the lists at the top of `.mise/tasks/setup-agents`.
+- **Skills** — **[docs/claude-skill-workflow.md](docs/claude-skill-workflow.md)** shows how to take an idea from first conversation to merged code, and which skill to reach for at each step.
+- **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 

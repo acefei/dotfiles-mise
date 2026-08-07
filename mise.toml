@@ -1,36 +1,10 @@
-# ~/dotfiles/mise.toml
-
-# ── Tools ──────────────────────────────────────────────────────────────────────
-
-[tools]
-# Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
-fzf       = "latest"
-gh        = "latest"
-go        = "latest"
-jq        = "latest"  # JSON processor; used by the speak-aloud plugin's Stop hook
-node      = "lts"
-ripgrep   = "latest"
-rust      = "stable"
-terraform = "latest"
-usage     = "latest"  # required for mise completions
-uv        = "latest"
-
-# github: — GitHub releases, uses GitHub owner/repo with binary releases
-# https://mise.jdx.dev/dev-tools/backends/github.html
-# mise auto-detects the right asset for the current OS/arch.
-"github:extrawurst/gitui" = "latest"
-
-# npm: — global npm packages, managed by mise (requires node above)
-# https://mise.jdx.dev/dev-tools/backends/npm.html
-"npm:@anthropic-ai/claude-code" = "latest"
-
-# ── Environment ────────────────────────────────────────────────────────────────
-
-[env]
-PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"
-EDITOR = "vi"
-
-# ── Bootstrap ──────────────────────────────────────────────────────────────────
+# Setup tasks for this repo.
+#
+#   mise run bootstrap      # everything
+#   mise run setup-git      # just one
+#   mise tasks              # list them
+#
+# Each task is a script in .mise/tasks/. Tools live in config/mise/tools.toml.
 
 [tasks.bootstrap]
 description = "Set up complete development environment"
@@ -43,13 +17,3 @@ depends     = [
     "setup-utility",
     "setup-agents",
 ]
-
-# ── Setup tasks ────────────────────────────────────────────────────────────────
-#
-# All setup-* tasks are file tasks in .mise/tasks/. They are NOT inline `run`
-# tasks, and that is deliberate: install.sh symlinks this file to
-# ~/.config/mise/config.toml, and when mise loads a config as the *global*
-# config it sets MISE_PROJECT_ROOT to $HOME for inline tasks — so
-# "$MISE_PROJECT_ROOT/config/git/gitconfig" resolved to "$HOME/config/..." and
-# every inline task that referenced a repo path failed. File tasks get the real
-# repo root, so keep them there.

@@ -81,26 +81,8 @@ A new product, a migration, anything where the route to the end is not visible y
   `/implement` or `/triage` on its own — you have to type them.
 - **`/wayfinder` resolves at most one ticket per session** (research excepted). That is
   deliberate, not a limit to route around.
-- **Never install this pack twice.** The plugin and `gh skill install mattpocock/skills`
-  are two routes to the same skills; taking both leaves you with every skill duplicated,
-  and the `gh skill` copies land in `~/.claude/skills/` where they shadow nothing but
-  clutter everything. This repo deliberately uses the **plugin** route only — see
-  `CLAUDE_PLUGINS` in `.mise/tasks/setup-agents`.
-
-- **The official marketplace is not pre-registered.** A fresh Claude Code install
-  reports `No marketplaces configured`, and installing
-  `mattpocock-skills@claude-plugins-official` fails with *"Plugin not found in
-  marketplace"*. `setup-agents` therefore adds `anthropics/claude-plugins-official`
-  like any other marketplace before installing from it.
-- **Check for a second copy after bootstrap.** The official marketplace entry is a
-  SHA-pinned mirror of `mattpocock/skills`, and installing it can auto-register that
-  repo's *own* marketplace (`mattpocock`) and install the plugin a second time. Verify:
-
-  ```bash
-  claude plugin list | grep -c mattpocock-skills   # must be 1
-  claude plugin uninstall mattpocock-skills@mattpocock   # if it is 2
-  claude plugin marketplace remove mattpocock
-  ```
+- **Install this pack once.** It ships both as a plugin and as a `gh skill` pack;
+  taking both routes gives you every skill twice. `setup-agents` uses the plugin.
 
 ## Updating
 
@@ -108,12 +90,5 @@ A new product, a migration, anything where the route to the end is not visible y
 claude plugin update mattpocock-skills   # restart the session to pick it up
 ```
 
-Because the official entry is SHA-pinned, updates land when that pin is bumped rather
-than the moment upstream ships. That lag is the deliberate trade: this repo installs
-**`mattpocock-skills@claude-plugins-official`** and nothing else. The upstream
-`mattpocock/skills` route is not used — its `.claude-plugin/plugin.json` does not give
-a reliably resolvable version, so the pinned official entry is the one to trust.
-
-The plugin cache under `~/.claude/plugins/cache/` is managed and is overwritten on
-update. If you hand-edit a skill there, keep the change as a patch outside the cache so
-it can be re-applied.
+If a skill ever looks wrong, check you have exactly one copy — `claude plugin list |
+grep -c mattpocock-skills` should print `1`.

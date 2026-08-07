@@ -2,7 +2,6 @@
 #MISE description="Install vimrc and install plugins"
 set -euo pipefail
 
-rm -f "$HOME/.vimrc"
 install -m 644 "$MISE_PROJECT_ROOT/config/vim/vimrc" "$HOME/.vimrc"
 
 "$MISE_PROJECT_ROOT/config/vim/plug_installer"
