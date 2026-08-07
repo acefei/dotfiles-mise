@@ -44,42 +44,12 @@ depends     = [
     "setup-agents",
 ]
 
-# ── Git ────────────────────────────────────────────────────────────────────────
-
-[tasks.setup-git]
-description = "Install git config files"
-run = [
-    "rm -f $HOME/.gitconfig && install -m 644 $MISE_PROJECT_ROOT/config/git/gitconfig $HOME/.gitconfig",
-    "rm -f $HOME/.gitignore_global && install -m 644 $MISE_PROJECT_ROOT/config/git/gitignore_global $HOME/.gitignore_global",
-]
-
-# ── Tmux ───────────────────────────────────────────────────────────────────────
-
-[tasks.setup-tmux]
-description = "Install tmux config and tpm plugins"
-run = [
-    "rm -f $HOME/.tmux.conf && install -m 644 $MISE_PROJECT_ROOT/config/tmux/tmux.conf $HOME/.tmux.conf",
-    "$MISE_PROJECT_ROOT/config/tmux/tpm_installer",
-]
-
-# ── Vim ────────────────────────────────────────────────────────────────────────
-
-[tasks.setup-vim]
-description = "Install vimrc and install plugins"
-run = [
-    "rm -f $HOME/.vimrc && install -m 644 $MISE_PROJECT_ROOT/config/vim/vimrc $HOME/.vimrc",
-    "$MISE_PROJECT_ROOT/config/vim/plug_installer",
-]
-
-# ── Utility scripts ────────────────────────────────────────────────────────────
-
-[tasks.setup-utility]
-description = "Install utility scripts to ~/.local/bin"
-run = """
-install -d ~/.local/bin
-for cmd in $MISE_PROJECT_ROOT/utility/*; do
-    dest="$HOME/.local/bin/$(basename "$cmd")"
-    rm -f "$dest"
-    install -m 755 "$cmd" "$dest"
-done
-"""
+# ── Setup tasks ────────────────────────────────────────────────────────────────
+#
+# All setup-* tasks are file tasks in .mise/tasks/. They are NOT inline `run`
+# tasks, and that is deliberate: install.sh symlinks this file to
+# ~/.config/mise/config.toml, and when mise loads a config as the *global*
+# config it sets MISE_PROJECT_ROOT to $HOME for inline tasks — so
+# "$MISE_PROJECT_ROOT/config/git/gitconfig" resolved to "$HOME/config/..." and
+# every inline task that referenced a repo path failed. File tasks get the real
+# repo root, so keep them there.

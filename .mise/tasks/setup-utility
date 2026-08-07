@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Install utility scripts to ~/.local/bin"
+set -euo pipefail
+
+install -d "$HOME/.local/bin"
+
+for cmd in "$MISE_PROJECT_ROOT"/utility/*; do
+    [[ -e "$cmd" ]] || continue
+    dest="$HOME/.local/bin/$(basename "$cmd")"
+    rm -f "$dest"
+    install -m 755 "$cmd" "$dest"
+done

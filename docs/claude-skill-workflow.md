@@ -87,6 +87,11 @@ A new product, a migration, anything where the route to the end is not visible y
   clutter everything. This repo deliberately uses the **plugin** route only — see
   `CLAUDE_PLUGINS` in `.mise/tasks/setup-agents`.
 
+- **The official marketplace is not pre-registered.** A fresh Claude Code install
+  reports `No marketplaces configured`, and installing
+  `mattpocock-skills@claude-plugins-official` fails with *"Plugin not found in
+  marketplace"*. `setup-agents` therefore adds `anthropics/claude-plugins-official`
+  like any other marketplace before installing from it.
 - **Check for a second copy after bootstrap.** The official marketplace entry is a
   SHA-pinned mirror of `mattpocock/skills`, and installing it can auto-register that
   repo's *own* marketplace (`mattpocock`) and install the plugin a second time. Verify:

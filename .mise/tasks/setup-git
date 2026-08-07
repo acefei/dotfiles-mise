@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Install git config files"
+set -euo pipefail
+
+rm -f "$HOME/.gitconfig"
+install -m 644 "$MISE_PROJECT_ROOT/config/git/gitconfig" "$HOME/.gitconfig"
+
+rm -f "$HOME/.gitignore_global"
+install -m 644 "$MISE_PROJECT_ROOT/config/git/gitignore_global" "$HOME/.gitignore_global"

@@ -29,6 +29,10 @@ setup_vscode() {
 CLAUDE_MARKETPLACES=(
     "affaan-m/ECC"   # ECC = "everything claude code" (https://github.com/affaan-m/ECC)
     "acefei/agent-accelerator"   # https://github.com/acefei/agent-accelerator
+    # Claude Code's official marketplace. It is NOT pre-registered on a fresh
+    # machine (`claude plugin marketplace list` reports "No marketplaces
+    # configured"), so it has to be added here like any other.
+    "anthropics/claude-plugins-official"
 )
 
 # Claude Code plugins to install.
@@ -37,10 +41,10 @@ CLAUDE_PLUGINS=(
     "ecc@ecc"
     "accelerator-core@agent-accelerator"
     "accelerator-loops@agent-accelerator"
-    # Matt Pocock's engineering skills. Ships in Claude Code's built-in
-    # `claude-plugins-official` marketplace, so there's nothing to register.
-    # Deliberately the plugin, NOT `gh skill install mattpocock/skills` — taking
-    # both routes installs every skill twice. See docs/claude-skill-workflow.md.
+    # Matt Pocock's engineering skills, from the official marketplace registered
+    # above. Deliberately the plugin, NOT `gh skill install mattpocock/skills` —
+    # taking both routes installs every skill twice.
+    # See docs/claude-skill-workflow.md.
     "mattpocock-skills@claude-plugins-official"
 )
 
