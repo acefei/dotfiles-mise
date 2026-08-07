@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Configure Claude Code and VSCode (settings, marketplaces, plugins, skills)"
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 setup_vscode() {
@@ -26,9 +27,12 @@ setup_vscode() {
 
 # Claude Code plugin marketplaces to register.
 #   format: "<marketplace-source>"  (GitHub owner/repo, git URL, or local path)
+# Every marketplace must be listed, including Anthropic's own — none are
+# registered by default.
 CLAUDE_MARKETPLACES=(
-    "affaan-m/ECC"   # ECC = "everything claude code" (https://github.com/affaan-m/ECC)
-    "acefei/agent-accelerator"   # https://github.com/acefei/agent-accelerator
+    "affaan-m/ECC"                        # "everything claude code"
+    "acefei/agent-accelerator"
+    "anthropics/claude-plugins-official"  # Claude Code's official marketplace
 )
 
 # Claude Code plugins to install.
@@ -36,21 +40,22 @@ CLAUDE_MARKETPLACES=(
 CLAUDE_PLUGINS=(
     "ecc@ecc"
     "accelerator-core@agent-accelerator"
+    "accelerator-loops@agent-accelerator"
+    "mattpocock-skills@claude-plugins-official"
 )
 
-# Agent skill packs to install via the GitHub CLI (`gh skill` — preview).
-# These are plain SKILL.md files — no build step, unlike installing the full repo.
-# `gh` is already a managed mise tool with auth wired in install.sh (no node/npx).
-# `gh skill` resolves to the latest tag, then default-branch HEAD.
+# Skill packs installed via `gh skill` (preview) rather than as plugins.
+# A pack available both ways belongs in one list or the other, never both —
+# installing twice gives you every skill twice. See docs/claude-skill-workflow.md.
 #   format: "<source>"  (GitHub owner/repo or git URL)
 CLAUDE_SKILLS=(
-    "mattpocock/skills"   # https://github.com/mattpocock/skills
     "cli/cli"             # https://github.com/cli/cli/tree/trunk/skills (gh, gh-skill)
 )
 
 setup_claude() {
-    if ! command -v claude &>/dev/null; then
-        echo "Claude Code CLI not available (managed by mise), skipping Claude setup"
+    # Run it, don't just look for it — a shim can exist with no working binary.
+    if ! claude --version &>/dev/null; then
+        echo "Claude Code CLI not available or not runnable, skipping Claude setup"
         return 0
     fi
 
@@ -77,11 +82,11 @@ setup_claude() {
     for marketplace in "${CLAUDE_MARKETPLACES[@]}"; do
         echo "Registering Claude plugin marketplace: $marketplace"
         # Adding an already-registered marketplace errors; fall back to update.
-        # The marketplace name is its own (lowercased) identifier, derived here
-        # from the last path segment of the source as a best-effort default.
-        marketplace_name="${marketplace##*/}"
+        # Its name is the last path segment, lowercased. Use tr — macOS bash 3.2
+        # has no ${x,,}.
+        marketplace_name=$(printf '%s' "${marketplace##*/}" | tr '[:upper:]' '[:lower:]')
         claude plugin marketplace add "$marketplace" \
-            || claude plugin marketplace update "${marketplace_name,,}" \
+            || claude plugin marketplace update "$marketplace_name" \
             || true
     done
 
@@ -92,11 +97,13 @@ setup_claude() {
     done
 
     if [[ ${#CLAUDE_SKILLS[@]} -gt 0 ]] && command -v gh &>/dev/null; then
+        # `gh skill` is a preview command; `--all` needs a recent gh, and mise
+        # won't re-resolve an already-installed "latest".
+        mise upgrade gh &>/dev/null || true
+
         local skill_source
         for skill_source in "${CLAUDE_SKILLS[@]}"; do
             echo "Installing Claude skill pack: $skill_source"
-            # Install all skills into Claude Code, user-global, non-interactively.
-            # `--all` requires a recent gh; install.sh keeps gh on the latest release.
             gh skill install "$skill_source" --all --agent claude-code --scope user --force \
                 || echo "Skill install failed for $skill_source, continuing"
         done

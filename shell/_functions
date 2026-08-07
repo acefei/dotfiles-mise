@@ -100,16 +100,18 @@ ask()  # See 'killps' for example of use.
     esac
 }
 
-_git_help()
+# Print one of this repo's docs. Used by the *-help aliases.
+_dotfiles_doc()
 {
-    local doc="$DOTFILES/docs/git-alias.md"
+    local doc="$DOTFILES/docs/$1"
     if [ -f "$doc" ]; then
         cat "$doc"
     else
         echo "Doc not found: $doc"
     fi
 }
-alias git-help=_git_help
+
+alias git-help='_dotfiles_doc git-alias.md'
 
 _add_ssh_agent()
 {

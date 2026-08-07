@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Install bash-completion and git completions"
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 GIT_VERSION=$(git --version | grep -Eo '[0-9]+(\.[0-9]+)+' | head -1)

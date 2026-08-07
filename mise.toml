@@ -1,36 +1,10 @@
-# ~/dotfiles/mise.toml
-
-# ── Tools ──────────────────────────────────────────────────────────────────────
-
-[tools]
-# Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
-fzf       = "latest"
-gh        = "latest"
-go        = "latest"
-jq        = "latest"  # JSON processor; used by the speak-aloud plugin's Stop hook
-node      = "lts"
-ripgrep   = "latest"
-rust      = "stable"
-terraform = "latest"
-usage     = "latest"  # required for mise completions
-uv        = "latest"
-
-# github: — GitHub releases, uses GitHub owner/repo with binary releases
-# https://mise.jdx.dev/dev-tools/backends/github.html
-# mise auto-detects the right asset for the current OS/arch.
-"github:extrawurst/gitui" = "latest"
-
-# npm: — global npm packages, managed by mise (requires node above)
-# https://mise.jdx.dev/dev-tools/backends/npm.html
-"npm:@anthropic-ai/claude-code" = "latest"
-
-# ── Environment ────────────────────────────────────────────────────────────────
-
-[env]
-PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"
-EDITOR = "vi"
-
-# ── Bootstrap ──────────────────────────────────────────────────────────────────
+# Setup tasks for this repo.
+#
+#   mise run bootstrap      # everything
+#   mise run setup-git      # just one
+#   mise tasks              # list them
+#
+# Each task is a script in .mise/tasks/. Tools live in config/mise/tools.toml.
 
 [tasks.bootstrap]
 description = "Set up complete development environment"
@@ -43,43 +17,3 @@ depends     = [
     "setup-utility",
     "setup-agents",
 ]
-
-# ── Git ────────────────────────────────────────────────────────────────────────
-
-[tasks.setup-git]
-description = "Install git config files"
-run = [
-    "rm -f $HOME/.gitconfig && install -m 644 $MISE_PROJECT_ROOT/config/git/gitconfig $HOME/.gitconfig",
-    "rm -f $HOME/.gitignore_global && install -m 644 $MISE_PROJECT_ROOT/config/git/gitignore_global $HOME/.gitignore_global",
-]
-
-# ── Tmux ───────────────────────────────────────────────────────────────────────
-
-[tasks.setup-tmux]
-description = "Install tmux config and tpm plugins"
-run = [
-    "rm -f $HOME/.tmux.conf && install -m 644 $MISE_PROJECT_ROOT/config/tmux/tmux.conf $HOME/.tmux.conf",
-    "$MISE_PROJECT_ROOT/config/tmux/tpm_installer",
-]
-
-# ── Vim ────────────────────────────────────────────────────────────────────────
-
-[tasks.setup-vim]
-description = "Install vimrc and install plugins"
-run = [
-    "rm -f $HOME/.vimrc && install -m 644 $MISE_PROJECT_ROOT/config/vim/vimrc $HOME/.vimrc",
-    "$MISE_PROJECT_ROOT/config/vim/plug_installer",
-]
-
-# ── Utility scripts ────────────────────────────────────────────────────────────
-
-[tasks.setup-utility]
-description = "Install utility scripts to ~/.local/bin"
-run = """
-install -d ~/.local/bin
-for cmd in $MISE_PROJECT_ROOT/utility/*; do
-    dest="$HOME/.local/bin/$(basename "$cmd")"
-    rm -f "$dest"
-    install -m 755 "$cmd" "$dest"
-done
-"""

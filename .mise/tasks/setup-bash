@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-source $MISE_PROJECT_ROOT/lib/utils.sh
+#MISE description="Install bash 5+ and wire up ~/.bash_profile"
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 if [[ ! -x ~/.local/bin/bash || $(~/.local/bin/bash -c 'echo ${BASH_VERSINFO[0]}') -lt 5 ]]; then
     BASH_VER=$(curl -fsSL https://ftp.gnu.org/gnu/bash/ \

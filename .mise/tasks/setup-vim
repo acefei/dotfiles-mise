@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Install vimrc and install plugins"
+set -euo pipefail
+
+install -m 644 "$MISE_PROJECT_ROOT/config/vim/vimrc" "$HOME/.vimrc"
+
+"$MISE_PROJECT_ROOT/config/vim/plug_installer"
