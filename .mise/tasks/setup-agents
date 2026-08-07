@@ -36,6 +36,12 @@ CLAUDE_MARKETPLACES=(
 CLAUDE_PLUGINS=(
     "ecc@ecc"
     "accelerator-core@agent-accelerator"
+    "accelerator-loops@agent-accelerator"
+    # Matt Pocock's engineering skills. Ships in Claude Code's built-in
+    # `claude-plugins-official` marketplace, so there's nothing to register.
+    # Deliberately the plugin, NOT `gh skill install mattpocock/skills` — taking
+    # both routes installs every skill twice. See docs/claude-skill-workflow.md.
+    "mattpocock-skills@claude-plugins-official"
 )
 
 # Agent skill packs to install via the GitHub CLI (`gh skill` — preview).
@@ -44,7 +50,6 @@ CLAUDE_PLUGINS=(
 # `gh skill` resolves to the latest tag, then default-branch HEAD.
 #   format: "<source>"  (GitHub owner/repo or git URL)
 CLAUDE_SKILLS=(
-    "mattpocock/skills"   # https://github.com/mattpocock/skills
     "cli/cli"             # https://github.com/cli/cli/tree/trunk/skills (gh, gh-skill)
 )
 

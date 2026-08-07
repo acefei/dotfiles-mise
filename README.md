@@ -35,7 +35,7 @@ dotfiles/
 │   └── vscode/             # settings.json, keybindings.json, extensions.txt
 ├── utility/                # Scripts symlinked to ~/.local/bin
 ├── templates/              # Cloud-init and Docker starter files
-├── docs/                   # Reference docs (git aliases, fzf, worktrees)
+├── docs/                   # Reference docs (git aliases, fzf, worktrees, skill workflow)
 └── .mise/tasks/            # Complex setup scripts (OS detection, loops, etc.)
 ```
 
@@ -82,6 +82,7 @@ mise run bootstrap          # runs all tasks
 ## AI agent settings
 
 - **Unified agents setup**: the `setup-agents` task configures agent-related tooling in one stage.
-- **Claude Code**: `setup-agents` installs the Claude Code CLI (if missing), symlinks settings and hooks from `agents/claude/` to `~/.claude/`, then registers the [ECC](https://github.com/affaan-m/ECC) ("everything claude code") marketplace and installs the `ecc` plugin.
+- **Claude Code**: `setup-agents` installs the Claude Code CLI (if missing), symlinks settings and hooks from `agents/claude/` to `~/.claude/`, then registers the [ECC](https://github.com/affaan-m/ECC) ("everything claude code") and [agent-accelerator](https://github.com/acefei/agent-accelerator) marketplaces and installs the plugins listed in `CLAUDE_PLUGINS`.
+- **Agent skills**: the [mattpocock-skills](https://github.com/mattpocock/skills) pack is installed as a **plugin** from Claude Code's built-in marketplace. See **[docs/claude-skill-workflow.md](docs/claude-skill-workflow.md)** for the idea → spec → tickets → implementation pipeline it provides. Install it by exactly one route — plugin *or* `gh skill` — never both, or every skill lands twice.
 - **VSCode**: settings, keybindings, and extension list live in `agents/vscode/` and are applied by `setup-agents`.
 
