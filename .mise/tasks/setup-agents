@@ -46,7 +46,7 @@ CLAUDE_PLUGINS=(
 
 # Skill packs installed via `gh skill` (preview) rather than as plugins.
 # A pack available both ways belongs in one list or the other, never both —
-# installing twice gives you every skill twice. See docs/claude-skill-workflow.md.
+# installing twice gives you every skill twice. One doc per plugin under docs/.
 #   format: "<source>"  (GitHub owner/repo or git URL)
 CLAUDE_SKILLS=(
     "cli/cli"             # https://github.com/cli/cli/tree/trunk/skills (gh, gh-skill)
@@ -69,13 +69,12 @@ setup_claude() {
         install -m 644 "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
     fi
 
-    # Global CLAUDE.md (personal always-on instructions) — symlink so repo edits
-    # propagate. Don't clobber a real (non-symlink) CLAUDE.md a machine already has.
-    if [[ -e "$claude_dir/CLAUDE.md" && ! -L "$claude_dir/CLAUDE.md" ]]; then
-        echo "Claude CLAUDE.md already exists (not a symlink), keeping current $claude_dir/CLAUDE.md"
-    else
-        ln -sfn "$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$claude_dir/CLAUDE.md"
-    fi
+    # Global CLAUDE.md: import ours, keep whatever else you've written there.
+    # Earlier versions symlinked this file — appending through the link would
+    # edit the repo copy, so drop the link first.
+    local claude_md="$claude_dir/CLAUDE.md"
+    [[ -L "$claude_md" ]] && rm -f "$claude_md"
+    ensure_line "@$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$claude_md"
 
     local marketplace plugin marketplace_name
 

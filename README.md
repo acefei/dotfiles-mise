@@ -19,6 +19,7 @@ dotfiles/
 ├── lib/
 │   └── utils.sh            # Shared bash helpers (is_mac, download, …)
 ├── shell/
+│   ├── profile             # Interactive shell setup, sourced from ~/.bash_profile
 │   ├── dynamic_source_all  # Sources every shell/_* file at login
 │   ├── _aliases
 │   ├── _functions
@@ -50,6 +51,31 @@ Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
 - Prefer a tool entry when: something has versioned releases and you want `mise install` / `mise upgrade` to manage it.
 - Prefer a task when: setup is stateful (symlinking, building from source, writing config files) or needs OS-aware logic.
 - Keep tasks idempotent — re-running `mise run bootstrap` on an existing machine should be safe.
+
+## Your config files are included, not replaced
+
+Setup never overwrites `~/.gitconfig`, `~/.tmux.conf`, `~/.vimrc`, `~/.bash_profile`,
+`~/.bashrc` or `~/.claude/CLAUDE.md`. It appends **one line** to each, using that
+format's own include directive:
+
+```gitconfig
+[include]                                   # ~/.gitconfig
+	path = ~/dotfiles-mise/config/git/gitconfig
+```
+```tmux
+source-file ~/dotfiles-mise/config/tmux/tmux.conf   # ~/.tmux.conf
+```
+```bash
+source ~/dotfiles-mise/shell/profile                # ~/.bash_profile, ~/.bashrc
+```
+
+So anything you keep in those files survives, re-running `mise run bootstrap` adds
+nothing twice, and editing a file in this repo takes effect immediately. Because the
+include goes last, this repo's settings win — put machine-specific overrides *after*
+it if you need the opposite.
+
+Two formats have no include mechanism, so they stay copies: `~/.claude/settings.json`
+(written only if absent) and the VSCode JSON files.
 
 ## Adding a tool
 
@@ -88,9 +114,23 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
-`mise run setup-agents` sets up Claude Code and VSCode together.
+`mise run setup-agents` sets up Claude Code and VSCode together. To change which
+marketplaces, plugins, or skill packs you get, edit the lists at the top of
+`.mise/tasks/setup-agents`.
 
-- **Claude Code** — settings and hooks from `agents/claude/` are linked into `~/.claude/`. To change which marketplaces, plugins, or skill packs you get, edit the lists at the top of `.mise/tasks/setup-agents`.
-- **Skills** — **[docs/claude-skill-workflow.md](docs/claude-skill-workflow.md)** shows how to take an idea from first conversation to merged code, and which skill to reach for at each step.
-- **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
+### Claude Code plugins
+
+One page each — what it's for, what to type, and what it costs you in context:
+
+| Plugin | For | Context |
+| --- | --- | --- |
+| [ecc](docs/claude-plugin-ecc.md) | Breadth: reviewers, build fixers and language patterns for most stacks | **~24k tok** |
+| [mattpocock-skills](docs/claude-plugin-mattpocock-skills.md) | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
+| [accelerator-core](docs/claude-plugin-accelerator-core.md) | Speak replies aloud; safe remote work over SSH | ~190 tok |
+| [accelerator-loops](docs/claude-plugin-accelerator-loops.md) | Long jobs that run to a checkable finish line | ~150 tok |
+
+That context cost is paid in **every** session. `ecc` alone is most of it — read its
+page before deciding to leave it enabled.
+
+**VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 

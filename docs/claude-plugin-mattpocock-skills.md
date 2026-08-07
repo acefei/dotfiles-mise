@@ -1,6 +1,8 @@
-# Claude Skill Workflow
+# mattpocock-skills
 
-How to take an idea from nothing to shipped code using the [mattpocock-skills](https://github.com/mattpocock/skills) plugin, installed by `mise run setup-agents`.
+[mattpocock/skills](https://github.com/mattpocock/skills) — an opinionated pipeline for
+taking an idea from nothing to shipped code. 25 skills, ~1.2k tokens always-on.
+Installed by `mise run setup-agents`.
 
 ## Mental model
 
