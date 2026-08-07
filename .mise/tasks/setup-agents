@@ -58,8 +58,11 @@ CLAUDE_SKILLS=(
 )
 
 setup_claude() {
-    if ! command -v claude &>/dev/null; then
-        echo "Claude Code CLI not available (managed by mise), skipping Claude setup"
+    # `command -v` is not enough: mise's macOS shim can exist while the native
+    # binary is missing ("claude native binary not installed"), so every claude
+    # call below would fail. Require a CLI that actually runs.
+    if ! claude --version &>/dev/null; then
+        echo "Claude Code CLI not available or not runnable, skipping Claude setup"
         return 0
     fi
 
@@ -88,9 +91,11 @@ setup_claude() {
         # Adding an already-registered marketplace errors; fall back to update.
         # The marketplace name is its own (lowercased) identifier, derived here
         # from the last path segment of the source as a best-effort default.
-        marketplace_name="${marketplace##*/}"
+        # Lowercase with tr, not ${x,,} — macOS ships bash 3.2, where that
+        # expansion is a fatal "bad substitution".
+        marketplace_name=$(printf '%s' "${marketplace##*/}" | tr '[:upper:]' '[:lower:]')
         claude plugin marketplace add "$marketplace" \
-            || claude plugin marketplace update "${marketplace_name,,}" \
+            || claude plugin marketplace update "$marketplace_name" \
             || true
     done
 
