@@ -1,6 +1,38 @@
 #!/usr/bin/env bash
 #MISE description="Install git config files"
 set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
-install -m 644 "$MISE_PROJECT_ROOT/config/git/gitconfig" "$HOME/.gitconfig"
-install -m 644 "$MISE_PROJECT_ROOT/config/git/gitignore_global" "$HOME/.gitignore_global"
+# Only ever hand-edited, so link it.
+link_config "$MISE_PROJECT_ROOT/config/git/gitignore_global" "$HOME/.gitignore_global"
+
+# ~/.gitconfig has two authors: you, and `git config --global`. That rules out
+# both of the usual options. A copy loses every edit on the next setup run. A
+# symlink is worse than it looks: git resolves the symlink before locking and
+# writes THROUGH it, so one `git config --global user.email ...` would land a
+# machine-local value inside this repo and leave the tree dirty.
+#
+# So include the repo file from a small local one. Git applies values in the
+# order it reads them, so anything written below the include wins, and
+# `git config --global` keeps working exactly as it does today.
+repo_gitconfig="$MISE_PROJECT_ROOT/config/git/gitconfig"
+
+if [[ -e "$HOME/.gitconfig" ]] &&
+    git config --global --get-all include.path 2>/dev/null | grep -qxF "$repo_gitconfig"; then
+    echo "~/.gitconfig already includes $repo_gitconfig"
+else
+    had_gitconfig=false
+    [[ -e "$HOME/.gitconfig" ]] && had_gitconfig=true
+    backup_once "$HOME/.gitconfig"
+    cat > "$HOME/.gitconfig" <<EOF
+# Machine-local git config. Keep it small -- shared settings belong in the repo
+# file included below. Anything git writes here (git config --global ...) is
+# read after the include, so it overrides the shared value.
+[include]
+    path = $repo_gitconfig
+EOF
+    echo "Wrote ~/.gitconfig including $repo_gitconfig"
+    if [[ "$had_gitconfig" == true ]]; then
+        echo "Your previous settings are in the backup above -- copy any machine-local ones back, below the include."
+    fi
+fi

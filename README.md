@@ -51,6 +51,28 @@ Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
 - Prefer a task when: setup is stateful (symlinking, building from source, writing config files) or needs OS-aware logic.
 - Keep tasks idempotent — re-running `mise run bootstrap` on an existing machine should be safe.
 
+### Link, include, or copy
+
+How a config file is installed depends on **who writes it**, not on how often you
+change it.
+
+| Who writes it | How it is installed | Examples |
+|---|---|---|
+| Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml`, Claude `rules/` |
+| You **and** a tool | **Include** — a small machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig` includes `config/git/gitconfig` |
+| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
+
+Never symlink a file a tool rewrites. `git config --global` in particular writes
+*through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
+this repo.
+
+Tasks adopt a machine that already has its own files instead of skipping it: an
+existing `~/.claude/CLAUDE.md` gets an `@import` of the repo file appended, and an
+existing `~/.claude/rules/` gets the repo rules linked in as `rules/dotfiles`
+(Claude Code discovers rules recursively). Whatever was there is kept. Anything
+replaced is moved to `<file>.backup` exactly once — a second run never overwrites
+the first backup.
+
 ## Adding a tool
 
 Add one line to `config/mise/tools.toml` under `[tools]`, then `mise install`:
