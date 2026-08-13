@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
-#MISE description="Install git config files"
+#MISE description="Point ~/.gitconfig at this repo's git config"
 set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
-install -m 644 "$MISE_PROJECT_ROOT/config/git/gitconfig" "$HOME/.gitconfig"
+gitconfig="$HOME/.gitconfig"
+included="$MISE_PROJECT_ROOT/config/git/gitconfig"
+
+# Ask git itself whether we're already included — appending a bare `path =`
+# would otherwise land under whatever section happens to be last.
+if ! git config --file "$gitconfig" --get-all include.path 2>/dev/null \
+        | grep -qxF "$included"; then
+    printf '\n[include]\n\tpath = %s\n' "$included" >> "$gitconfig"
+    echo "Added include to $gitconfig"
+fi
+
+# Referenced by core.excludesfile in the included config, and wholly ours.
 install -m 644 "$MISE_PROJECT_ROOT/config/git/gitignore_global" "$HOME/.gitignore_global"

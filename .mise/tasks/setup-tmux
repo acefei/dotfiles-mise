@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Install tmux config and tpm plugins"
+#MISE description="Point ~/.tmux.conf at this repo's tmux config, install tpm plugins"
 set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
-install -m 644 "$MISE_PROJECT_ROOT/config/tmux/tmux.conf" "$HOME/.tmux.conf"
+ensure_line "source-file $MISE_PROJECT_ROOT/config/tmux/tmux.conf" "$HOME/.tmux.conf"
 
 "$MISE_PROJECT_ROOT/config/tmux/tpm_installer"

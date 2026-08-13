@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Install vimrc and install plugins"
+#MISE description="Point ~/.vimrc at this repo's vimrc, install plugins"
 set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
-install -m 644 "$MISE_PROJECT_ROOT/config/vim/vimrc" "$HOME/.vimrc"
+ensure_line "source $MISE_PROJECT_ROOT/config/vim/vimrc" "$HOME/.vimrc"
 
 "$MISE_PROJECT_ROOT/config/vim/plug_installer"

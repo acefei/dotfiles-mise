@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-#MISE description="Install utility scripts to ~/.local/bin"
+#MISE description="Symlink utility scripts into ~/.local/bin"
 set -euo pipefail
 
 install -d "$HOME/.local/bin"
 
+# Symlinked, not copied, so edits in the repo take effect immediately.
 for cmd in "$MISE_PROJECT_ROOT"/utility/*; do
     [[ -e "$cmd" ]] || continue
-    install -m 755 "$cmd" "$HOME/.local/bin/$(basename "$cmd")"
+    ln -sfn "$cmd" "$HOME/.local/bin/$(basename "$cmd")"
 done
