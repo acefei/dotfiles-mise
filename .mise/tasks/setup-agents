@@ -77,6 +77,16 @@ setup_claude() {
         ln -sfn "$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$claude_dir/CLAUDE.md"
     fi
 
+    # Personal rules (~/.claude/rules/*.md) — Claude Code discovers these itself,
+    # no import from CLAUDE.md needed, and loads them at session start with the
+    # same priority. Symlink the directory so repo edits propagate; same guard as
+    # above, never clobber a real directory a machine already has.
+    if [[ -e "$claude_dir/rules" && ! -L "$claude_dir/rules" ]]; then
+        echo "Claude rules already exist (not a symlink), keeping current $claude_dir/rules"
+    else
+        ln -sfn "$MISE_PROJECT_ROOT/agents/claude/rules" "$claude_dir/rules"
+    fi
+
     local marketplace plugin marketplace_name
 
     for marketplace in "${CLAUDE_MARKETPLACES[@]}"; do
