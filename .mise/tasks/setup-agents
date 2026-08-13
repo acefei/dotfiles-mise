@@ -22,11 +22,7 @@ setup_vscode() {
     # changed in the editor since the last setup.
     local f
     for f in settings.json keybindings.json; do
-        if [[ -e "$vscode_dir/$f" ]]; then
-            echo "VSCode $f already exists, keeping current $vscode_dir/$f"
-        else
-            install -m 644 "$MISE_PROJECT_ROOT/agents/vscode/$f" "$vscode_dir/$f"
-        fi
+        copy_once "$MISE_PROJECT_ROOT/agents/vscode/$f" "$vscode_dir/$f"
     done
 
     while IFS= read -r ext; do
@@ -72,12 +68,8 @@ setup_claude() {
     local claude_dir="$HOME/.claude"
     install -d "$claude_dir"
 
-    # Don't clobber an existing settings.json (may contain user customizations).
-    if [[ -e "$claude_dir/settings.json" ]]; then
-        echo "Claude settings already exist, keeping current $claude_dir/settings.json"
-    else
-        install -m 644 "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
-    fi
+    # Claude Code writes this file itself, so seed it and leave it alone.
+    copy_once "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
 
     # Global CLAUDE.md (personal always-on instructions). A machine with nothing
     # there gets a symlink, so repo edits propagate. A machine that already has a
@@ -95,7 +87,7 @@ setup_claude() {
             echo "Imported the repo CLAUDE.md from your existing $claude_md"
         fi
     else
-        ln -sfn "$repo_claude_md" "$claude_md"
+        link_config "$repo_claude_md" "$claude_md"
     fi
 
     # Personal rules (~/.claude/rules/*.md) — Claude Code discovers these itself,
@@ -111,7 +103,7 @@ setup_claude() {
         ln -sfn "$repo_rules" "$rules_dir/dotfiles"
         echo "Linked repo rules into $rules_dir/dotfiles (existing rules kept)"
     else
-        ln -sfn "$repo_rules" "$rules_dir"
+        link_config "$repo_rules" "$rules_dir"
     fi
 
     local marketplace plugin marketplace_name

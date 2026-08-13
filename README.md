@@ -61,17 +61,20 @@ change it.
 | Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml`, Claude `rules/` |
 | You **and** a tool | **Include** — a small machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig` includes `config/git/gitconfig` |
 | Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
+| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md`, existing `~/.claude/rules/` |
 
 Never symlink a file a tool rewrites. `git config --global` in particular writes
 *through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
 this repo.
 
-Tasks adopt a machine that already has its own files instead of skipping it: an
-existing `~/.claude/CLAUDE.md` gets an `@import` of the repo file appended, and an
-existing `~/.claude/rules/` gets the repo rules linked in as `rules/dotfiles`
-(Claude Code discovers rules recursively). Whatever was there is kept. Anything
-replaced is moved to `<file>.backup` exactly once — a second run never overwrites
-the first backup.
+Adoption is what the last row means: an existing `~/.claude/CLAUDE.md` gets an
+`@import` of the repo file appended, and an existing `~/.claude/rules/` gets the
+repo rules linked in as `rules/dotfiles`, which Claude Code discovers recursively.
+Whatever was there is kept. Anything replaced is moved to `<file>.backup` exactly
+once — a second run never overwrites the first backup.
+
+`lib/utils.sh` holds one helper per strategy: `link_config`, `copy_once`, and
+`backup_once` beneath both.
 
 ## Adding a tool
 

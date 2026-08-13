@@ -17,12 +17,14 @@ link_config "$MISE_PROJECT_ROOT/config/git/gitignore_global" "$HOME/.gitignore_g
 # `git config --global` keeps working exactly as it does today.
 repo_gitconfig="$MISE_PROJECT_ROOT/config/git/gitconfig"
 
-if [[ -e "$HOME/.gitconfig" ]] &&
+had_gitconfig=false
+[[ -e "$HOME/.gitconfig" ]] && had_gitconfig=true
+
+# Ask git, not the file: it resolves the include however it is spelled or nested.
+if [[ "$had_gitconfig" == true ]] &&
     git config --global --get-all include.path 2>/dev/null | grep -qxF "$repo_gitconfig"; then
     echo "~/.gitconfig already includes $repo_gitconfig"
 else
-    had_gitconfig=false
-    [[ -e "$HOME/.gitconfig" ]] && had_gitconfig=true
     backup_once "$HOME/.gitconfig"
     cat > "$HOME/.gitconfig" <<EOF
 # Machine-local git config. Keep it small -- shared settings belong in the repo

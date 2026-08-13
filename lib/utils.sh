@@ -64,8 +64,22 @@ backup_once() {
 # include instead -- see setup-git for the include pattern.
 link_config() {
     local src=$1 dest=$2
-    mkdir -p "$(dirname "$dest")"
+    [[ "$dest" == */* ]] && mkdir -p "${dest%/*}"
     # Re-pointing a symlink we already own is not worth a backup.
     [[ -L "$dest" ]] || backup_once "$dest"
     ln -sfn "$src" "$dest"
+}
+
+# Seed $2 from $1 once, then never touch it again.
+#
+# For files a tool rewrites: VSCode and Claude Code both save their own settings,
+# so the repo copy is a starting point, not the truth. Copying on every run threw
+# away whatever the tool -- or you, through its UI -- had changed since.
+copy_once() {
+    local src=$1 dest=$2 mode=${3:-644}
+    if [[ -e "$dest" ]]; then
+        echo "$dest already exists, keeping it"
+        return 0
+    fi
+    install -m "$mode" "$src" "$dest"
 }
