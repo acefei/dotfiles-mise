@@ -19,6 +19,7 @@ dotfiles/
 ├── lib/
 │   └── utils.sh            # Shared bash helpers (is_mac, download, …)
 ├── shell/
+│   ├── profile             # Interactive shell setup, sourced from ~/.bash_profile
 │   ├── dynamic_source_all  # Sources every shell/_* file at login
 │   ├── _aliases
 │   ├── _functions
@@ -59,7 +60,7 @@ change it.
 | Who writes it | How it is installed | Examples |
 |---|---|---|
 | Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml`, Claude `rules/` |
-| You **and** a tool | **Include** — a small machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig` includes `config/git/gitconfig` |
+| You **and** a tool | **Include** — one line in a machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig`, `~/.bash_profile`, `~/.bashrc` |
 | Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
 | You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md`, existing `~/.claude/rules/` |
 
@@ -67,14 +68,28 @@ Never symlink a file a tool rewrites. `git config --global` in particular writes
 *through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
 this repo.
 
+An include is a single appended line in that format's own directive, so whatever
+else you keep in the file survives and a re-run never adds it twice:
+
+```gitconfig
+[include]                                    # ~/.gitconfig
+	path = ~/dotfiles-mise/config/git/gitconfig
+```
+```bash
+source ~/dotfiles-mise/shell/profile         # ~/.bash_profile, ~/.bashrc
+```
+
+Because the include goes last, this repo's settings win — put machine-specific
+overrides *after* it if you need the opposite.
+
 Adoption is what the last row means: an existing `~/.claude/CLAUDE.md` gets an
 `@import` of the repo file appended, and an existing `~/.claude/rules/` gets the
 repo rules linked in as `rules/dotfiles`, which Claude Code discovers recursively.
 Whatever was there is kept. Anything replaced is moved to `<file>.backup` exactly
 once — a second run never overwrites the first backup.
 
-`lib/utils.sh` holds one helper per strategy: `link_config`, `copy_once`, and
-`backup_once` beneath both.
+`lib/utils.sh` holds one helper per strategy: `link_config`, `ensure_line`,
+`copy_once`, and `backup_once` beneath them.
 
 ## Adding a tool
 
@@ -113,9 +128,23 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
-`mise run setup-agents` sets up Claude Code and VSCode together.
+`mise run setup-agents` sets up Claude Code and VSCode together. To change which
+marketplaces, plugins, or skill packs you get, edit the lists at the top of
+`.mise/tasks/setup-agents`.
 
-- **Claude Code** — settings and hooks from `agents/claude/` are linked into `~/.claude/`. To change which marketplaces, plugins, or skill packs you get, edit the lists at the top of `.mise/tasks/setup-agents`.
-- **Skills** — **[docs/claude-skill-workflow.md](docs/claude-skill-workflow.md)** shows how to take an idea from first conversation to merged code, and which skill to reach for at each step.
-- **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
+### Claude Code plugins
+
+One page each — what it's for, what to type, and what it costs you in context:
+
+| Plugin | For | Context |
+| --- | --- | --- |
+| [ecc](docs/claude-plugin-ecc.md) | Breadth: reviewers, build fixers and language patterns for most stacks | **~24k tok** |
+| [mattpocock-skills](docs/claude-plugin-mattpocock-skills.md) | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
+| [accelerator-core](docs/claude-plugin-accelerator-core.md) | Speak replies aloud; safe remote work over SSH | ~190 tok |
+| [accelerator-loops](docs/claude-plugin-accelerator-loops.md) | Long jobs that run to a checkable finish line | ~150 tok |
+
+That context cost is paid in **every** session. `ecc` alone is most of it — read its
+page before deciding to leave it enabled.
+
+**VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 

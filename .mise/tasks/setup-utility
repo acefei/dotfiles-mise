@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Install utility scripts to ~/.local/bin"
+#MISE description="Symlink utility scripts into ~/.local/bin"
 set -euo pipefail
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Install bash 5+ and wire up ~/.bash_profile"
+#MISE description="Install bash 5+ and source this repo's shell profile"
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 if [[ ! -x ~/.local/bin/bash || $(~/.local/bin/bash -c 'echo ${BASH_VERSINFO[0]}') -lt 5 ]]; then
@@ -16,41 +16,10 @@ if [[ ! -x ~/.local/bin/bash || $(~/.local/bin/bash -c 'echo ${BASH_VERSINFO[0]}
     run_quiet make install
 fi
 
-PROFILE=$HOME/.bash_profile
-
-# Back up an existing profile -- once. The old unconditional mv overwrote
-# .bash_profile.backup on every run, so the second run replaced the real
-# original with the file this task generated on the first.
-backup_once "$PROFILE"
-
-cat > "$PROFILE" <<'PROFILE_EOF'
-case $- in
-  *i*) ;; # interactive shell only
-  *) return ;;
-esac
-
-stty start undef
-
-export HISTSIZE=100
-export HISTFILESIZE=100
-export LC_ALL=en_US.UTF-8
-export PATH=~/.local/bin:$PATH
-export EDITOR=vi
-
-eval "$(mise activate bash)"
-
-[[ -f ~/.local/share/bash-completion/bash_completion ]] && \
-    source ~/.local/share/bash-completion/bash_completion
-
-PROFILE_EOF
-
-# Embed DOTFILES path and source shell configs (resolved at setup time)
-echo "export DOTFILES=\"$MISE_PROJECT_ROOT\""              >> "$PROFILE"
-echo "source $MISE_PROJECT_ROOT/shell/dynamic_source_all"  >> "$PROFILE"
-
-# Symlink .bashrc → .bash_profile. link_config backs up a real file once and
-# simply re-points a symlink we already own, so re-running leaves no trail of
-# backups and never turns .bashrc.backup into a link to .bash_profile.
-link_config "$PROFILE" "$HOME/.bashrc"
+# One line into each, so anything else you keep there survives. Login shells
+# read .bash_profile, other interactive shells read .bashrc.
+for rc in "$HOME/.bash_profile" "$HOME/.bashrc"; do
+    ensure_line "source $MISE_PROJECT_ROOT/shell/profile" "$rc"
+done
 
 echo "Shell configured. Re-login or: source ~/.bash_profile"

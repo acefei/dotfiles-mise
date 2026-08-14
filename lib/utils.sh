@@ -83,3 +83,14 @@ copy_once() {
     fi
     install -m "$mode" "$src" "$dest"
 }
+
+# Append a line to a file unless it is already there. Creates the file if
+# missing and never rewrites what is already in it, so your own edits survive
+# every re-run. This is the include strategy: one line pointing at the repo,
+# rather than replacing a file its owner also writes.
+ensure_line() {
+    local line=$1 file=$2
+    mkdir -p "$(dirname "$file")"
+    [[ -f "$file" ]] && grep -qxF "$line" "$file" && return 0
+    printf '%s\n' "$line" >> "$file"
+}
