@@ -52,30 +52,44 @@ Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
 - Prefer a task when: setup is stateful (symlinking, building from source, writing config files) or needs OS-aware logic.
 - Keep tasks idempotent — re-running `mise run bootstrap` on an existing machine should be safe.
 
-## Your config files are included, not replaced
+### Link, include, or copy
 
-Setup never overwrites `~/.gitconfig`, `~/.tmux.conf`, `~/.vimrc`, `~/.bash_profile`,
-`~/.bashrc` or `~/.claude/CLAUDE.md`. It appends **one line** to each, using that
-format's own include directive:
+How a config file is installed depends on **who writes it**, not on how often you
+change it.
+
+| Who writes it | How it is installed | Examples |
+|---|---|---|
+| Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml`, Claude `rules/` |
+| You **and** a tool | **Include** — one line in a machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig`, `~/.bash_profile`, `~/.bashrc` |
+| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
+| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md`, existing `~/.claude/rules/` |
+
+Never symlink a file a tool rewrites. `git config --global` in particular writes
+*through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
+this repo.
+
+An include is a single appended line in that format's own directive, so whatever
+else you keep in the file survives and a re-run never adds it twice:
 
 ```gitconfig
-[include]                                   # ~/.gitconfig
+[include]                                    # ~/.gitconfig
 	path = ~/dotfiles-mise/config/git/gitconfig
 ```
-```tmux
-source-file ~/dotfiles-mise/config/tmux/tmux.conf   # ~/.tmux.conf
-```
 ```bash
-source ~/dotfiles-mise/shell/profile                # ~/.bash_profile, ~/.bashrc
+source ~/dotfiles-mise/shell/profile         # ~/.bash_profile, ~/.bashrc
 ```
 
-So anything you keep in those files survives, re-running `mise run bootstrap` adds
-nothing twice, and editing a file in this repo takes effect immediately. Because the
-include goes last, this repo's settings win — put machine-specific overrides *after*
-it if you need the opposite.
+Because the include goes last, this repo's settings win — put machine-specific
+overrides *after* it if you need the opposite.
 
-Two formats have no include mechanism, so they stay copies: `~/.claude/settings.json`
-(written only if absent) and the VSCode JSON files.
+Adoption is what the last row means: an existing `~/.claude/CLAUDE.md` gets an
+`@import` of the repo file appended, and an existing `~/.claude/rules/` gets the
+repo rules linked in as `rules/dotfiles`, which Claude Code discovers recursively.
+Whatever was there is kept. Anything replaced is moved to `<file>.backup` exactly
+once — a second run never overwrites the first backup.
+
+`lib/utils.sh` holds one helper per strategy: `link_config`, `ensure_line`,
+`copy_once`, and `backup_once` beneath them.
 
 ## Adding a tool
 

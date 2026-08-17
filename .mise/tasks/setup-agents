@@ -16,8 +16,14 @@ setup_vscode() {
     fi
 
     install -d "$vscode_dir"
-    install -m 644 "$MISE_PROJECT_ROOT/agents/vscode/settings.json" "$vscode_dir/settings.json"
-    install -m 644 "$MISE_PROJECT_ROOT/agents/vscode/keybindings.json" "$vscode_dir/keybindings.json"
+
+    # VSCode rewrites both of these from its own UI, so they are seeded once and
+    # then left alone. Copying them on every run destroyed whatever you had
+    # changed in the editor since the last setup.
+    local f
+    for f in settings.json keybindings.json; do
+        copy_once "$MISE_PROJECT_ROOT/agents/vscode/$f" "$vscode_dir/$f"
+    done
 
     while IFS= read -r ext; do
         [[ "$ext" =~ ^#|^$ ]] && continue
@@ -62,19 +68,43 @@ setup_claude() {
     local claude_dir="$HOME/.claude"
     install -d "$claude_dir"
 
-    # Don't clobber an existing settings.json (may contain user customizations).
-    if [[ -e "$claude_dir/settings.json" ]]; then
-        echo "Claude settings already exist, keeping current $claude_dir/settings.json"
+    # Claude Code writes this file itself, so seed it and leave it alone.
+    copy_once "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
+
+    # Global CLAUDE.md (personal always-on instructions). A machine with nothing
+    # there gets a symlink, so repo edits propagate. A machine that already has a
+    # real CLAUDE.md keeps it — but merely keeping it left the repo silently
+    # disconnected, so import the repo file from it instead. Claude Code expands
+    # @path imports (four hops deep), and imports in user-scope files load
+    # without the external-import prompt.
+    local claude_md="$claude_dir/CLAUDE.md"
+    local repo_claude_md="$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md"
+    if [[ -e "$claude_md" && ! -L "$claude_md" ]]; then
+        if grep -qF "@$repo_claude_md" "$claude_md"; then
+            echo "Claude CLAUDE.md already imports the repo file"
+        else
+            printf '\n@%s\n' "$repo_claude_md" >> "$claude_md"
+            echo "Imported the repo CLAUDE.md from your existing $claude_md"
+        fi
     else
-        install -m 644 "$MISE_PROJECT_ROOT/agents/claude/settings.json" "$claude_dir/settings.json"
+        link_config "$repo_claude_md" "$claude_md"
     fi
 
-    # Global CLAUDE.md: import ours, keep whatever else you've written there.
-    # Earlier versions symlinked this file — appending through the link would
-    # edit the repo copy, so drop the link first.
-    local claude_md="$claude_dir/CLAUDE.md"
-    [[ -L "$claude_md" ]] && rm -f "$claude_md"
-    ensure_line "@$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$claude_md"
+    # Personal rules (~/.claude/rules/*.md) — Claude Code discovers these itself,
+    # no import from CLAUDE.md needed, and loads them at session start with the
+    # same priority. Symlink the directory so repo edits propagate; same guard as
+    # above, never clobber a real directory a machine already has.
+    local rules_dir="$claude_dir/rules"
+    local repo_rules="$MISE_PROJECT_ROOT/agents/claude/rules"
+    if [[ -d "$rules_dir" && ! -L "$rules_dir" ]]; then
+        # Rules are discovered recursively and symlinks are resolved, so a machine
+        # with its own rules keeps every one of them and gets the repo's linked in
+        # beside them. Nothing of yours is moved, and both sets load.
+        ln -sfn "$repo_rules" "$rules_dir/dotfiles"
+        echo "Linked repo rules into $rules_dir/dotfiles (existing rules kept)"
+    else
+        link_config "$repo_rules" "$rules_dir"
+    fi
 
     local marketplace plugin marketplace_name
 
