@@ -40,18 +40,22 @@ CLAUDE_MARKETPLACES=(
     "acefei/agent-accelerator"
     "anthropics/claude-plugins-official"  # Claude Code's official marketplace
     "AminBlg/SimpleEnglish"               # ASD-STE100 skill + output style
+    "chuspeeism/dashi-ppt-skill"          # browser-editable decks -> HTML/PDF/PPTX
 )
 
 # Claude Code plugins to install.
 #   format: "<plugin>@<marketplace-name>"
 # The marketplace name comes from its marketplace.json, NOT from the repo name.
 # AminBlg/SimpleEnglish declares itself "simple-english".
+# chuspeeism/dashi-ppt-skill declares the marketplace "dashi-ppt-skill" and the
+# plugin inside it "dashi-ppt".
 CLAUDE_PLUGINS=(
     "ecc@ecc"
     "accelerator-core@agent-accelerator"
     "accelerator-loops@agent-accelerator"
     "mattpocock-skills@claude-plugins-official"
     "simple-english@simple-english"
+    "dashi-ppt@dashi-ppt-skill"
 )
 
 # Skill packs installed via `gh skill` (preview) rather than as plugins.
