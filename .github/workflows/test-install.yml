@@ -38,8 +38,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: ubuntu-22.04, container_image: "ubuntu:22.04", family: debian }
-          - { name: ubuntu-24.04, container_image: "ubuntu:24.04", family: debian }
           - { name: ubuntu-26.04, container_image: "ubuntu:26.04", family: debian }
           - { name: fedora-45,    container_image: "fedora:45",    family: fedora }
 
