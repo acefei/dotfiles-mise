@@ -47,14 +47,7 @@ CLAUDE_PLUGINS=(
     "accelerator-loops@agent-accelerator"
     "mattpocock-skills@agent-accelerator"  # re-published from mattpocock/skills
     "simple-english@agent-accelerator"     # re-published from AminBlg/SimpleEnglish
-)
-
-# Skill packs installed via `gh skill` (preview) rather than as plugins.
-# A pack available both ways belongs in one list or the other, never both —
-# installing twice gives you every skill twice. One doc per plugin under docs/.
-#   format: "<source>"  (GitHub owner/repo or git URL)
-CLAUDE_SKILLS=(
-    "cli/cli"             # https://github.com/cli/cli/tree/trunk/skills (gh, gh-skill)
+    "gh-skills@agent-accelerator"          # re-published from cli/cli (gh, gh-skill)
 )
 
 # mise's npm backend installs @anthropic-ai/claude-code without running the
@@ -130,19 +123,6 @@ setup_claude() {
         claude plugin install "$plugin" \
             || echo "Plugin install failed for $plugin, continuing"
     done
-
-    if [[ ${#CLAUDE_SKILLS[@]} -gt 0 ]] && command -v gh &>/dev/null; then
-        # `gh skill` is a preview command; `--all` needs a recent gh, and mise
-        # won't re-resolve an already-installed "latest".
-        mise upgrade gh &>/dev/null || true
-
-        local skill_source
-        for skill_source in "${CLAUDE_SKILLS[@]}"; do
-            echo "Installing Claude skill pack: $skill_source"
-            gh skill install "$skill_source" --all --agent claude-code --scope user --force \
-                || echo "Skill install failed for $skill_source, continuing"
-        done
-    fi
 }
 
 setup_vscode
