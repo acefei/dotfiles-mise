@@ -33,23 +33,20 @@ setup_vscode() {
 
 # Claude Code plugin marketplaces to register.
 #   format: "<marketplace-source>"  (GitHub owner/repo, git URL, or local path)
-# Every marketplace must be listed, including Anthropic's own — none are
-# registered by default.
+# None are registered by default. agent-accelerator is the only one: it also
+# re-publishes the external plugins below at a pinned commit.
 CLAUDE_MARKETPLACES=(
     "acefei/agent-accelerator"
-    "anthropics/claude-plugins-official"  # Claude Code's official marketplace
-    "AminBlg/SimpleEnglish"               # ASD-STE100 skill + output style
 )
 
 # Claude Code plugins to install.
 #   format: "<plugin>@<marketplace-name>"
 # The marketplace name comes from its marketplace.json, NOT from the repo name.
-# AminBlg/SimpleEnglish declares itself "simple-english".
 CLAUDE_PLUGINS=(
     "accelerator-core@agent-accelerator"
     "accelerator-loops@agent-accelerator"
-    "mattpocock-skills@claude-plugins-official"
-    "simple-english@simple-english"
+    "mattpocock-skills@agent-accelerator"  # re-published from mattpocock/skills
+    "simple-english@agent-accelerator"     # re-published from AminBlg/SimpleEnglish
 )
 
 # Skill packs installed via `gh skill` (preview) rather than as plugins.

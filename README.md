@@ -146,13 +146,16 @@ marketplaces, plugins, or skill packs you get, edit the lists at the top of
 
 ### Claude Code plugins
 
-What each one is for, and what it costs you in context:
+All of them come from one marketplace, [`acefei/agent-accelerator`](https://github.com/acefei/agent-accelerator),
+which re-publishes the external plugins at a pinned commit. What each one is for, and what
+it costs you in context:
 
 | Plugin | For | Context |
 | --- | --- | --- |
 | `mattpocock-skills` | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
 | `accelerator-core` | Speak replies aloud; safe remote work over SSH | ~190 tok |
 | `accelerator-loops` | Long jobs that run to a checkable finish line | ~150 tok |
+| `simple-english` | ASD-STE100 writing skill + the `simple-english` output style | ~150 tok |
 
 That context cost is paid in **every** session — run `claude plugin details <plugin>`
 for the current figure before you add a plugin.
