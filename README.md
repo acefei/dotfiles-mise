@@ -141,7 +141,7 @@ mise run bootstrap          # all of them, in parallel
 ## AI agent settings
 
 `mise run setup-agents` sets up Claude Code and VSCode together. To change which
-marketplaces, plugins, or skill packs you get, edit the lists at the top of
+marketplaces or plugins you get, edit the lists at the top of
 `.mise/tasks/setup-agents`.
 
 ### Claude Code plugins
@@ -156,6 +156,7 @@ it costs you in context:
 | `accelerator-core` | Speak replies aloud; safe remote work over SSH | ~190 tok |
 | `accelerator-loops` | Long jobs that run to a checkable finish line | ~150 tok |
 | `simple-english` | ASD-STE100 writing skill + the `simple-english` output style | ~150 tok |
+| `gh-skills` | `gh` and `gh-skill` skills from `cli/cli` | ~90 tok |
 
 That context cost is paid in **every** session — run `claude plugin details <plugin>`
 for the current figure before you add a plugin.
