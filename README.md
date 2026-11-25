@@ -150,13 +150,12 @@ What each one is for, and what it costs you in context:
 
 | Plugin | For | Context |
 | --- | --- | --- |
-| `ecc` | Breadth: reviewers, build fixers and language patterns for most stacks | **~24k tok** |
 | `mattpocock-skills` | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
 | `accelerator-core` | Speak replies aloud; safe remote work over SSH | ~190 tok |
 | `accelerator-loops` | Long jobs that run to a checkable finish line | ~150 tok |
 
-That context cost is paid in **every** session. `ecc` alone is most of it — run
-`claude plugin details <plugin>` for the current figure before leaving it enabled.
+That context cost is paid in **every** session — run `claude plugin details <plugin>`
+for the current figure before you add a plugin.
 
 **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 
