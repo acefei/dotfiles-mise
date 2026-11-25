@@ -36,7 +36,6 @@ setup_vscode() {
 # Every marketplace must be listed, including Anthropic's own — none are
 # registered by default.
 CLAUDE_MARKETPLACES=(
-    "affaan-m/ECC"                        # "everything claude code"
     "acefei/agent-accelerator"
     "anthropics/claude-plugins-official"  # Claude Code's official marketplace
     "AminBlg/SimpleEnglish"               # ASD-STE100 skill + output style
@@ -47,7 +46,6 @@ CLAUDE_MARKETPLACES=(
 # The marketplace name comes from its marketplace.json, NOT from the repo name.
 # AminBlg/SimpleEnglish declares itself "simple-english".
 CLAUDE_PLUGINS=(
-    "ecc@ecc"
     "accelerator-core@agent-accelerator"
     "accelerator-loops@agent-accelerator"
     "mattpocock-skills@claude-plugins-official"
