@@ -27,6 +27,7 @@ uv        = "latest"
 # npm: — global npm packages (requires node above).
 # https://mise.jdx.dev/dev-tools/backends/npm.html
 "npm:@anthropic-ai/claude-code" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"  # pi, the coding agent (see setup-pi)
 
 [env]
 PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"

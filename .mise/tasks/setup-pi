@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+#MISE description="Configure the pi coding agent (settings, instructions, marketplace skills)"
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+# The skills come from the marketplace that Claude Code uses, so both agents get the
+# same pinned commits. It is read from the marketplace's own marketplace.json.
+PI_MARKETPLACE="acefei/agent-accelerator"
+PI_MARKETPLACE_REF="main"
+
+# Plugins whose skills pi gets. pi lists every skill description in its system prompt,
+# so each plugin costs context in every session: keep this list short.
+# Slash commands, hooks and output styles do not exist in pi, so plugins that only
+# ship those (accelerator-loops, tokeneconomizer) are not listed.
+PI_PLUGINS=(
+    "accelerator-core"
+    "mattpocock-skills"
+    "simple-english"
+    "gh-skills"
+)
+
+PI_DIR="$HOME/.pi/agent"
+PI_CACHE="$PI_DIR/marketplace"       # our own clones, safe to delete
+PI_SKILLS="$HOME/.agents/skills"     # Agent Skills location that pi scans
+
+# Check out commit $2 of repo $1 into $3. With $4, fetch only that sub-directory.
+# Skips the fetch when $3 is already at the commit.
+fetch_pinned() {
+    local url=$1 sha=$2 dest=$3 subdir=${4:-}
+    if [[ -d "$dest/.git" && "$(git -C "$dest" rev-parse HEAD 2>/dev/null)" == "$sha" ]]; then
+        return 0
+    fi
+    rm -rf "$dest"
+    mkdir -p "$dest"
+    git -C "$dest" init -q
+    git -C "$dest" remote add origin "$url"
+    if [[ -n "$subdir" ]]; then
+        git -C "$dest" sparse-checkout set --cone "$subdir"
+    fi
+    git -C "$dest" fetch -q --depth 1 --filter=blob:none origin "$sha" \
+        && git -C "$dest" checkout -q FETCH_HEAD
+}
+
+# Clone the marketplace, or move an existing clone to the newest commit of its ref.
+sync_marketplace() {
+    local dir="$PI_CACHE/_marketplace"
+    if [[ -d "$dir/.git" ]]; then
+        git -C "$dir" fetch -q --depth 1 origin "$PI_MARKETPLACE_REF" \
+            && git -C "$dir" reset -q --hard FETCH_HEAD
+    else
+        rm -rf "$dir"
+        mkdir -p "$PI_CACHE"
+        git clone -q --depth 1 --branch "$PI_MARKETPLACE_REF" \
+            "https://github.com/$PI_MARKETPLACE.git" "$dir"
+    fi
+}
+
+# Print the skill directories of plugin $1, one per line.
+# Order: the marketplace entry's "skills", then the plugin's own plugin.json "skills",
+# then every SKILL.md under the plugin root (what Claude Code finds on its own).
+plugin_skill_dirs() {
+    local name=$1 market="$PI_CACHE/_marketplace" entry root url sha path skills
+    entry=$(jq -c --arg n "$name" '.plugins[] | select(.name == $n)' \
+        "$market/.claude-plugin/marketplace.json")
+    if [[ -z "$entry" ]]; then
+        echo "pi: plugin $name is not in the marketplace, skipping" >&2
+        return 1
+    fi
+
+    if [[ "$(jq -r '.source | type' <<<"$entry")" == "string" ]]; then
+        root="$market/$(jq -r '.source' <<<"$entry" | sed 's|^\./||')"
+    else
+        url=$(jq -r '.source.url' <<<"$entry")
+        sha=$(jq -r '.source.sha' <<<"$entry")
+        path=$(jq -r '.source.path // empty' <<<"$entry")
+        if ! fetch_pinned "$url" "$sha" "$PI_CACHE/$name" "$path" >&2; then
+            echo "pi: could not fetch $name from $url, skipping" >&2
+            return 1
+        fi
+        root="$PI_CACHE/$name${path:+/$path}"
+    fi
+
+    skills=$(jq -r '.skills[]?' <<<"$entry")
+    if [[ -z "$skills" && -f "$root/.claude-plugin/plugin.json" ]]; then
+        skills=$(jq -r '.skills[]?' "$root/.claude-plugin/plugin.json")
+    fi
+
+    if [[ -n "$skills" ]]; then
+        while IFS= read -r skill; do
+            echo "$root/${skill#./}"
+        done <<<"$skills"
+    else
+        find "$root" -name .git -prune -o -name SKILL.md -print | sed 's|/SKILL.md$||'
+    fi
+}
+
+setup_pi() {
+    # Run it, don't just look for it: a shim can exist with no working binary.
+    if ! pi --version &>/dev/null; then
+        echo "pi not installed, skipping pi setup"
+        return 0
+    fi
+
+    install -d "$PI_DIR"
+
+    # pi rewrites this file from its own commands (/model, /settings), so it is
+    # seeded once and then left alone. It holds no key: pi reads NVIDIA_API_KEY, or
+    # the key that `pi auth login nvidia --api-key` stores.
+    copy_once "$MISE_PROJECT_ROOT/agents/pi/settings.json" "$PI_DIR/settings.json"
+
+    # pi reads AGENTS.md from its agent directory. Link the file Claude Code uses, so
+    # one edit changes the instructions of both agents.
+    link_config "$MISE_PROJECT_ROOT/agents/claude/CLAUDE.md" "$PI_DIR/AGENTS.md"
+
+    if ! command -v jq &>/dev/null; then
+        echo "jq not installed, skipping pi skills"
+        return 0
+    fi
+    if ! sync_marketplace; then
+        echo "Could not read the $PI_MARKETPLACE marketplace, skipping pi skills"
+        return 0
+    fi
+
+    install -d "$PI_SKILLS"
+    local wanted plugin dir dest
+    wanted=$(mktemp)
+
+    for plugin in "${PI_PLUGINS[@]}"; do
+        echo "Linking pi skills of plugin: $plugin"
+        while IFS= read -r dir; do
+            [[ -f "$dir/SKILL.md" ]] || continue
+            dest="$PI_SKILLS/$(basename "$dir")"
+            if [[ -e "$dest" && ! -L "$dest" ]]; then
+                echo "  $dest exists and is not a link, keeping it"
+            elif grep -qxF "$dest" "$wanted"; then
+                echo "  $(basename "$dir") comes from two plugins, keeping the first"
+            else
+                ln -sfn "$dir" "$dest"
+            fi
+            echo "$dest" >>"$wanted"
+        done < <(plugin_skill_dirs "$plugin")
+    done
+
+    # Drop links this task made earlier for skills that are no longer wanted.
+    for dest in "$PI_SKILLS"/*; do
+        [[ -L "$dest" ]] || continue
+        [[ "$(readlink "$dest")" == "$PI_CACHE"/* ]] || continue
+        grep -qxF "$dest" "$wanted" || rm -f "$dest"
+    done
+    rm -f "$wanted"
+}
+
+setup_pi

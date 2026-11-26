@@ -1,0 +1,10 @@
+{
+	"$schema": "https://pi.dev/schemas/settings.schema.json",
+	"defaultProvider": "nvidia",
+	"enabledModels": [
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/z-ai/glm-5.3-flash",
+		"nvidia/poolside/laguna-xs-2.1",
+		"nvidia/minimaxai/minimax-m3.1-flash"
+	]
+}

@@ -34,6 +34,7 @@ dotfiles/
 │   └── vim/                # vimrc, plug_installer
 ├── agents/
 │   ├── claude/             # settings.json, hooks/
+│   ├── pi/                 # settings.json for the pi agent
 │   └── vscode/             # settings.json, keybindings.json, extensions.txt
 ├── utility/                # Scripts symlinked to ~/.local/bin
 ├── templates/              # Cloud-init and Docker starter files
@@ -162,4 +163,29 @@ That context cost is paid in **every** session — run `claude plugin details <p
 for the current figure before you add a plugin.
 
 **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
+
+### pi
+
+`mise run setup-pi` sets up [pi](https://github.com/earendil-works/pi), a coding agent
+that also runs on free model APIs. It does four things:
+
+- seeds `~/.pi/agent/settings.json` once (default provider: NVIDIA NIM);
+- links `agents/claude/CLAUDE.md` as `~/.pi/agent/AGENTS.md`, so both agents read one file;
+- links the skills of the plugins in `PI_PLUGINS` (top of `.mise/tasks/setup-pi`) into
+  `~/.agents/skills/`, at the commits that `acefei/agent-accelerator` pins for Claude Code;
+- removes the links of skills that you take out of that list.
+
+pi has no slash commands, hooks or output styles from Claude plugins, so plugins that only
+ship those are not in the list. pi puts every skill description in each session, about
+1.9k tokens for the default list.
+
+Give pi a key in one of two ways:
+
+```bash
+secrets set NVIDIA_API_KEY && secrets exec -- pi   # key stays in the sops store
+pi auth login nvidia --api-key                     # key stays in ~/.pi/agent/auth.json
+```
+
+Another free provider works the same way: set its key variable (`OPENROUTER_API_KEY`,
+`GROQ_API_KEY`, …) and start pi with `--model <provider>/<id>`.
 
