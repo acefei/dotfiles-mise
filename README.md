@@ -7,6 +7,11 @@ Personal development environment for Linux and macOS, managed by [mise](https://
 ## Quick start
 
 ```bash
+# Full bootstrap (interactive, prompts for NVIDIA API key if needed)
+curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
+
+# GitHub Actions / CI: pre-set NVIDIA_API_KEY in repository secrets
+export NVIDIA_API_KEY=sk-...
 curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
 ```
 
@@ -140,11 +145,48 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
+### Pi Coding Agent (NVIDIA NIM)
+
+`mise run setup-pi` configures Pi with latest NVIDIA models and validates.
+
+```bash
+mise run setup-pi           # Config + validation
+mise run bootstrap          # Full setup including Pi
+```
+
+#### Requirements
+- **NVIDIA API key** from https://build.nvidia.com/
+- Stored via `secrets` (sops+age) or `NVIDIA_API_KEY` env var
+
+#### What `setup-pi` does
+1. Runs `setup-secrets` (stores NVIDIA_API_KEY in encrypted store)
+2. Generates `~/.pi/agent/settings.json` with NVIDIA models only
+3. Installs Pi if missing
+4. Validates model: `secrets exec -- pi -p "validation"`
+
+#### GitHub Actions / CI
+```yaml
+env:
+  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+```
+Pre-sets key in environment — installer skips prompt, runs validation.
+
+#### Manual run (after bootstrap)
+```bash
+# Runs Pi with NVIDIA key from secrets (no env exposure)
+secrets exec -- pi
+
+# In Pi session:
+/login  # Select 'nvidia' provider
+```
+
+### Claude Code + VSCode
+
 `mise run setup-agents` sets up Claude Code and VSCode together. To change which
 marketplaces or plugins you get, edit the lists at the top of
 `.mise/tasks/setup-agents`.
 
-### Claude Code plugins
+#### Claude Code plugins
 
 All of them come from one marketplace, [`acefei/agent-accelerator`](https://github.com/acefei/agent-accelerator),
 which re-publishes the external plugins at a pinned commit. What each one is for, and what

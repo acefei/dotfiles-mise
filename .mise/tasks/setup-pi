@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#MISE description="Configure Pi Coding Agent (NVIDIA models) and validate"
+#MISE depends=["setup-secrets"]
+set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+PI_AGENT_DIR="$HOME/.pi/agent"
+
+echo "Setting up Pi Coding Agent..."
+
+# Ensure Pi agent directory exists
+install -d "$PI_AGENT_DIR"
+
+# Generate settings.json with latest NVIDIA models only
+SETTINGS_FILE="$PI_AGENT_DIR/settings.json"
+cat > "$SETTINGS_FILE" << 'EOF'
+{
+  "$schema": "https://pi.dev/schemas/settings.schema.json",
+  "defaultProvider": "nvidia",
+  "enabledModels": [
+    "nvidia/nemotron-3-ultra-253b-v1",
+    "nvidia/nemotron-3-ultra-550b-a55b",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "nvidia/nemotron-3.5-lightning",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b-128k"
+  ],
+  "defaultTools": ["+codemode"],
+  "hideThinkingBlock": false
+}
+EOF
+
+echo "Generated settings.json with NVIDIA models"
+
+# Check if Pi is installed
+if ! command -v pi &>/dev/null; then
+    echo "Pi not installed. Installing..."
+    curl -fsSL https://pi.dev/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+echo "Pi is installed: $(pi --version)"
+
+# Validate NVIDIA model works via secrets
+echo ""
+echo "Validating NVIDIA model via Pi..."
+secrets exec -- pi -p "Say 'OK' if NVIDIA model responds"
+echo "Pi validation complete!"

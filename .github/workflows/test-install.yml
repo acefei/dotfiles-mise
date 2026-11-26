@@ -62,8 +62,9 @@ jobs:
           CI: "true"
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: |
-          bash ./install.sh
+          echo "BACKED-UP" | bash ./install.sh
 
   install-macos:
     name: install on macos
@@ -79,5 +80,6 @@ jobs:
           CI: "true"
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: |
-          bash ./install.sh
+          echo "BACKED-UP" | bash ./install.sh
