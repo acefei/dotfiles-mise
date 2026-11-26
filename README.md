@@ -170,7 +170,7 @@ for the current figure before you add a plugin.
 ### Pi Coding Agent (NVIDIA NIM)
 
 `mise run setup-pi` installs [Pi](https://github.com/earendil-works/pi) if it is missing,
-seeds `~/.pi/agent/settings.json` once from `agents/pi/settings.json`, and tests every model
+seeds `~/.pi/agent/settings.json` and `models.json` once from `agents/pi/`, and tests every model
 in its `enabledModels` when a key is available. Pi rewrites its settings file itself
 (`/model`, `/settings`), so the task never overwrites it. To take a new model list from the
 repo, delete `~/.pi/agent/settings.json` and run the task again.
@@ -178,8 +178,12 @@ repo, delete `~/.pi/agent/settings.json` and run the task again.
 | Setting | Value | Why |
 | --- | --- | --- |
 | `defaultModel` | `nvidia/nemotron-3-ultra-550b-a55b` | The largest free model (550B, 1M context) |
-| `enabledModels` | the three free Nemotron models of build.nvidia.com, and `z-ai/glm-5.3-flash` | Cycle with Ctrl+P |
+| `enabledModels` | the two free Nemotron models of build.nvidia.com (Ultra and Super VL), `moonshotai/kimi-k3.1-pro`, `minimaxai/minimax-m3.1-flash`, and `z-ai/glm-5.3-flash` | Cycle with Ctrl+P |
 | `defaultThinkingLevel` | `high` | Pi's default is `medium` |
+
+`agents/pi/models.json` adds Kimi K3.1 Pro, which is not in Pi's built-in catalog yet. It sets
+only the id and the name, so Pi's defaults apply: 128k context, 16k output tokens, no reasoning
+flag. Remove the entry when Pi's catalog has the model.
 
 Pi sends no thinking parameter to NVIDIA models (checked with a local test server: the request
 is the same at `medium` and `high`), so the level changes what Pi shows and allows, not the

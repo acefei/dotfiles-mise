@@ -17,10 +17,12 @@ install_pi() {
 }
 
 # Pi rewrites settings.json from its own commands (/model, /settings), so the repo
-# file is a seed: copy it once and never overwrite what Pi or you changed.
+# files are seeds: copy them once and never overwrite what Pi or you changed.
+# models.json adds the models that Pi's built-in catalog does not have yet.
 seed_settings() {
     install -d "$PI_AGENT_DIR"
     copy_once "$PI_SEED" "$PI_AGENT_DIR/settings.json"
+    copy_once "$MISE_PROJECT_ROOT/agents/pi/models.json" "$PI_AGENT_DIR/models.json"
 }
 
 # Test every model in enabledModels of the seed, so the list in the repo is the list

@@ -1,0 +1,10 @@
+{
+	"$schema": "https://pi.dev/schemas/models.schema.json",
+	"providers": {
+		"nvidia": {
+			"models": [
+				{ "id": "moonshotai/kimi-k3.1-pro", "name": "Kimi K3.1 Pro" }
+			]
+		}
+	}
+}

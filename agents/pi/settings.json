@@ -6,8 +6,11 @@
 	"enabledModels": [
 		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
 		"nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/moonshotai/kimi-k3.1-pro",
+		"nvidia/minimaxai/minimax-m3.1-flash",
 		"nvidia/z-ai/glm-5.3-flash"
 	],
-	"defaultTools": ["+codemode"]
+	"defaultTools": [
+		"+codemode"
+	]
 }
