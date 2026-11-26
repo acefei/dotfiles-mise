@@ -31,8 +31,7 @@ dotfiles/
 │   ├── mise/tools.toml          # Tools + env, linked to ~/.config/mise/config.toml
 │   ├── git/                     # gitconfig, gitignore_global
 │   ├── tmux/                    # tmux.conf
-│   ├── vim/                     # vimrc, plug_installer
-│   └── pi/agent/                # Pi Coding Agent config (settings, extensions, subagents, skills)
+│   └── vim/                     # vimrc, plug_installer
 ├── agents/
 │   ├── claude/                  # settings.json, CLAUDE.md
 │   └── vscode/                  # settings.json, keybindings.json, extensions.txt
@@ -164,53 +163,21 @@ for the current figure before you add a plugin.
 
 ### Pi Coding Agent
 
-`mise run setup-pi` sets up Pi Coding Agent (settings, extensions, subagents, skills).
+`mise run setup-pi` configures Pi with NVIDIA provider and codemode enabled.
 
 ```bash
-mise run setup-pi           # just Pi
+mise run setup-pi           # just Pi (prompts for NVIDIA API key if needed)
 mise run bootstrap          # includes Pi + all other tasks
 ```
 
-#### Pi configuration (in `config/pi/agent/`)
+#### Requirements
+- **NVIDIA API key** from https://build.nvidia.com/
+- Stored via `secrets` (preferred) or `NVIDIA_API_KEY` env var
 
-| Component | Purpose |
-|---|---|
-| `settings.json` | Model, tools (codemode enabled), thinking levels |
-| `extensions/subagent/` | Subagent extension for parallel isolated agents |
-| `agents/*.md` | Subagent definitions (scout, planner, reviewer, worker) |
-| `prompts/*.md` | Workflow prompts (`/implement`, `/scout-and-plan`, `/implement-and-review`) |
-| `skills/` | Custom skills (tdd, code-review, api-design, diagnosing-bugs) |
-| `AGENTS.md` | Global instructions (shared with Claude) |
-
-#### Subagent extension usage
-
-```bash
-# In Pi session:
-Use scout to find all authentication code
-Run 3 scouts in parallel: models, providers, tests
-Use a chain: scout -> planner -> worker
-/implement add Redis caching
-```
-
-#### Skill marketplace overlap check
-
-The following custom skills overlap with `agent-accelerator` marketplace skills.
-Prefer marketplace skills (load on-demand, no context cost when unused) unless you need Pi-specific behavior (isolated process, different model).
-
-| Custom Skill | Marketplace Equivalent | Recommendation |
-|---|---|---|
-| `code-review` | `mattpocock-skills/code-review` | Use marketplace |
-| `diagnosing-bugs` | `mattpocock-skills/diagnosing-bugs` | Use marketplace |
-| `tdd` | `mattpocock-skills/tdd` | Use marketplace |
-| `api-design` | `mattpocock-skills/codebase-design` + `domain-modeling` | Use marketplace |
-| `subagents (scout/planner/reviewer/worker)` | `mattpocock-skills/implement` + `research` + `code-review` | Keep subagents for isolation |
-
-Marketplace skills available via `agent-accelerator`:
-- **Engineering**: `implement`, `research`, `prototype`, `tdd`, `code-review`, `codebase-design`, `domain-modeling`, `diagnosing-bugs`, `to-spec`, `to-tickets`, `triage`, `pr`, `improve-codebase-architecture`, `grill-with-docs`, `ask-matt`
-- **Productivity**: `grilling`, `grill-me`, `writing-for-agents`, `handoff`, `teach`, `wait-what`, `to-questionnaire`
-- **Core**: `remote-ssh-ops`, `secrets-cli` (accelerator-core)
-- **Writing**: `simple-english` (simple-english)
-- **GitHub**: `gh`, `gh-skill` (gh-skills)
+#### What it does
+- Generates `~/.pi/agent/settings.json` with NVIDIA models
+- Enables `codemode` tool by default
+- Run `/login` in Pi and select `nvidia` provider
 
 ## Development
 
