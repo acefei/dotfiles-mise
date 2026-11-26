@@ -200,14 +200,6 @@ mise run setup-pi           # install Pi, seed settings, test the models
 secrets exec -- pi          # run Pi with the key from the store
 ```
 
-#### GitHub Actions / CI
-
-The key is an **environment secret** named `NVIDIA_API_KEY` in the environment
-`NVIDIA_API_KEY`. A job sees it only when it names the environment, so each job has
-`environment: NVIDIA_API_KEY`. The key stays in the environment variable and is not stored,
-so CI needs no age key and no `BACKED-UP` answer. Without the secret, the model tests are
-skipped.
-
 ## Development
 
 ```bash
