@@ -1,46 +1,48 @@
 #!/usr/bin/env bash
-#MISE description="Configure Pi Coding Agent (NVIDIA models) and validate"
+#MISE description="Configure the Pi coding agent (NVIDIA provider) and check the model"
 #MISE depends=["setup-secrets"]
 set -euo pipefail
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 PI_AGENT_DIR="$HOME/.pi/agent"
 
-echo "Setting up Pi Coding Agent..."
-
-# Ensure Pi agent directory exists
-install -d "$PI_AGENT_DIR"
-
-# Generate settings.json with latest available NVIDIA models only
-SETTINGS_FILE="$PI_AGENT_DIR/settings.json"
-cat > "$SETTINGS_FILE" << 'EOF'
-{
-  "$schema": "https://pi.dev/schemas/settings.schema.json",
-  "defaultProvider": "nvidia",
-  "enabledModels": [
-    "nvidia/nemotron-3-ultra-550b-a55b",
-    "nvidia/nemotron-3.5-lightning",
-    "nvidia/nemotron-3.5-lightning-30b-a3b",
-    "nvidia/cosmos-reason2-8b"
-  ],
-  "defaultTools": ["+codemode"],
-  "hideThinkingBlock": false
-}
-EOF
-
-echo "Generated settings.json with NVIDIA models"
-
-# Check if Pi is installed
-if ! command -v pi &>/dev/null; then
+install_pi() {
+    if command -v pi &>/dev/null; then
+        return 0
+    fi
     echo "Pi not installed. Installing..."
     curl -fsSL https://pi.dev/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
-fi
+}
 
+# Pi rewrites settings.json from its own commands (/model, /settings), so the repo
+# file is a seed: copy it once and never overwrite what Pi or you changed.
+seed_settings() {
+    install -d "$PI_AGENT_DIR"
+    copy_once "$MISE_PROJECT_ROOT/config/pi/agent/settings.json" "$PI_AGENT_DIR/settings.json"
+}
+
+# Ask the model one question. Without a key there is nothing to check, so skip:
+# a machine that only wants its dotfiles must not fail because it has no key.
+# Pi reads the key from the environment (CI) or from the secrets store.
+# </dev/null: pi -p waits on stdin when it is not a terminal.
+check_model() {
+    local prompt="Reply with OK."
+    if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
+        echo "Checking the NVIDIA model (key from the environment)..."
+        pi -p "$prompt" </dev/null
+    elif command -v secrets &>/dev/null && secrets get NVIDIA_API_KEY &>/dev/null; then
+        echo "Checking the NVIDIA model (key from the secrets store)..."
+        secrets exec -- pi -p "$prompt" </dev/null
+    else
+        echo "No NVIDIA_API_KEY in the environment or the secrets store, skipping the model check."
+        echo "Add one with: mise run setup-secrets"
+    fi
+}
+
+echo "Setting up the Pi coding agent..."
+install_pi
 echo "Pi is installed: $(pi --version)"
-
-# Validate NVIDIA model works via secrets
-echo ""
-echo "Validating NVIDIA model via Pi..."
-secrets exec -- pi -p "Say 'OK' if NVIDIA model responds"
-echo "Pi validation complete!"
+seed_settings
+check_model
+echo "Pi setup complete"

@@ -7,11 +7,11 @@ Personal development environment for Linux and macOS, managed by [mise](https://
 ## Quick start
 
 ```bash
-# Full bootstrap (interactive, prompts for NVIDIA API key if needed)
+# Full bootstrap (interactive, prompts for NVIDIA API key)
 curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
 
-# GitHub Actions / CI: pre-set NVIDIA_API_KEY in repository secrets
-export NVIDIA_API_KEY=sk-...
+# GitHub Actions / CI: pre-set NVIDIA_API_KEY env var
+export NVIDIA_API_KEY=<your key>
 curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
 ```
 
@@ -19,13 +19,13 @@ curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.s
 
 ```
 dotfiles/
-├── mise.toml               # Tools, env vars, and simple tasks
-├── install.sh              # Fresh-machine bootstrap entry point
+├── mise.toml                    # Tools, env vars, and simple tasks
+├── install.sh                   # Fresh-machine bootstrap entry point
 ├── lib/
-│   └── utils.sh            # Shared bash helpers (is_mac, download, …)
+│   └── utils.sh                 # Shared bash helpers (is_mac, download, …)
 ├── shell/
-│   ├── profile             # Interactive shell setup, sourced from ~/.bash_profile
-│   ├── dynamic_source_all  # Sources every shell/_* file at login
+│   ├── profile                  # Interactive shell setup, sourced from ~/.bash_profile
+│   ├── dynamic_source_all       # Sources every shell/_* file at login
 │   ├── _aliases
 │   ├── _functions
 │   ├── _fzf
@@ -33,17 +33,17 @@ dotfiles/
 │   ├── _prompt
 │   └── _worktree
 ├── config/
-│   ├── mise/tools.toml     # Tools + env, linked to ~/.config/mise/config.toml
-│   ├── git/                # gitconfig, gitignore_global
-│   ├── tmux/               # tmux.conf
-│   └── vim/                # vimrc, plug_installer
+│   ├── mise/tools.toml          # Tools + env, linked to ~/.config/mise/config.toml
+│   ├── git/                     # gitconfig, gitignore_global
+│   ├── tmux/                    # tmux.conf
+│   └── vim/                     # vimrc, plug_installer
 ├── agents/
-│   ├── claude/             # settings.json, hooks/
-│   └── vscode/             # settings.json, keybindings.json, extensions.txt
-├── utility/                # Scripts symlinked to ~/.local/bin
-├── templates/              # Cloud-init and Docker starter files
-├── docs/                   # Reference docs (git aliases, fzf, worktrees, secrets)
-└── .mise/tasks/            # One executable script per setup-* task
+│   ├── claude/                  # settings.json, CLAUDE.md
+│   └── vscode/                  # settings.json, keybindings.json, extensions.txt
+├── utility/                     # Scripts symlinked to ~/.local/bin
+├── templates/                   # Cloud-init and Docker starter files
+├── docs/                        # Reference docs (git aliases, fzf, worktrees, secrets)
+└── .mise/tasks/                 # One executable script per setup-* task
 ```
 
 Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
@@ -80,8 +80,8 @@ change it.
 |---|---|---|
 | Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml` |
 | You **and** a tool | **Include** — one line in a machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig`, `~/.bash_profile`, `~/.bashrc` |
-| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
-| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md` |
+| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json`, Pi `settings.json` |
+| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md`, `~/.pi/agent/AGENTS.md` |
 
 Never symlink a file a tool rewrites. `git config --global` in particular writes
 *through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
@@ -145,63 +145,63 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
-### Pi Coding Agent (NVIDIA NIM)
-
-`mise run setup-pi` configures Pi with latest NVIDIA models and validates.
-
-```bash
-mise run setup-pi           # Config + validation
-mise run bootstrap          # Full setup including Pi
-```
-
-#### Requirements
-- **NVIDIA API key** from https://build.nvidia.com/
-- Stored via `secrets` (sops+age) or `NVIDIA_API_KEY` env var
-
-#### What `setup-pi` does
-1. Runs `setup-secrets` (stores NVIDIA_API_KEY in encrypted store)
-2. Generates `~/.pi/agent/settings.json` with NVIDIA models only
-3. Installs Pi if missing
-4. Validates model: `secrets exec -- pi -p "validation"`
-
-#### GitHub Actions / CI
-```yaml
-env:
-  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-```
-Pre-sets key in environment — installer skips prompt, runs validation.
-
-#### Manual run (after bootstrap)
-```bash
-# Runs Pi with NVIDIA key from secrets (no env exposure)
-secrets exec -- pi
-
-# In Pi session:
-/login  # Select 'nvidia' provider
-```
-
 ### Claude Code + VSCode
 
 `mise run setup-agents` sets up Claude Code and VSCode together. To change which
 marketplaces or plugins you get, edit the lists at the top of
 `.mise/tasks/setup-agents`.
 
-#### Claude Code plugins
-
-All of them come from one marketplace, [`acefei/agent-accelerator`](https://github.com/acefei/agent-accelerator),
-which re-publishes the external plugins at a pinned commit. What each one is for, and what
-it costs you in context:
+#### Claude Code plugins (from `acefei/agent-accelerator`)
 
 | Plugin | For | Context |
 | --- | --- | --- |
 | `mattpocock-skills` | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
 | `accelerator-core` | Speak replies aloud; safe remote work over SSH | ~190 tok |
 | `accelerator-loops` | Long jobs that run to a checkable finish line | ~150 tok |
-| `simple-english` | ASD-STE100 writing skill + the `simple-english` output style | ~150 tok |
+| `simple-english` | ASD-STE100 writing skill + `simple-english` output style | ~150 tok |
 | `gh-skills` | `gh` and `gh-skill` skills from `cli/cli` | ~90 tok |
 
-That context cost is paid in **every** session — run `claude plugin details <plugin>`
+Context cost is paid in **every** session — run `claude plugin details <plugin>`
 for the current figure before you add a plugin.
 
 **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 
+### Pi Coding Agent (NVIDIA NIM)
+
+`mise run setup-pi` installs [Pi](https://github.com/earendil-works/pi) if it is missing,
+seeds `~/.pi/agent/settings.json` once from `config/pi/agent/settings.json`, and asks the
+model one question when a key is available. Pi rewrites its settings file itself (`/model`,
+`/settings`), so the task never overwrites it.
+
+The key comes from one of two places:
+
+- **The environment**: `NVIDIA_API_KEY`. Use it in CI or for a one-off run.
+- **The secrets store**: `mise run setup-secrets` asks for the key (input hidden) and stores
+  it. The first `secrets init` makes you type `BACKED-UP`, so this step needs a terminal.
+
+With no key, `setup-pi` skips the model check and still succeeds.
+
+```bash
+mise run setup-secrets      # store the key (asks on a terminal)
+mise run setup-pi           # install Pi, seed settings, check the model
+secrets exec -- pi          # run Pi with the key from the store
+```
+
+#### GitHub Actions / CI
+
+CI sets `NVIDIA_API_KEY` from the repository secret. The key stays in the environment and
+is not stored, so CI needs no age key and no `BACKED-UP` answer. Without the repository
+secret, the model check is skipped.
+
+```yaml
+env:
+  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+```
+
+## Development
+
+```bash
+mise run bootstrap          # Full setup
+mise run setup-pi           # Pi only
+mise run setup-agents       # Claude + VSCode only
+```

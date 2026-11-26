@@ -28,6 +28,7 @@ Environment:
   DOTFILES_DIR    Override target repo location (default: $DEFAULT_DOTFILES_DIR).
   DOTFILES_REPO   Override clone URL (default: $DEFAULT_REPO_URL).
   GH_TOKEN / GITHUB_TOKEN   Avoid GitHub API rate limits during mise install.
+  NVIDIA_API_KEY  Pre-set NVIDIA API key for Pi (CI/GitHub Actions).
 EOF
 }
 
@@ -167,16 +168,6 @@ ensure_github_token() {
     esac
 }
 
-install_tools() {
-    echo "Installing tools..."
-    mise install
-}
-
-run_bootstrap() {
-    echo "Running bootstrap..."
-    mise run bootstrap
-}
-
 # ── Flow ────────────────────────────────────────────────────────────────────
 # One pipeline. --update pulls first and skips the fresh-machine-only steps.
 run_install() {
@@ -196,6 +187,16 @@ run_install() {
         install_tools
     fi
     run_bootstrap
+}
+
+install_tools() {
+    echo "Installing tools..."
+    mise install
+}
+
+run_bootstrap() {
+    echo "Running bootstrap..."
+    mise run bootstrap
 }
 
 main() {
