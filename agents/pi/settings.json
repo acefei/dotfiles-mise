@@ -1,0 +1,13 @@
+{
+	"$schema": "https://pi.dev/schemas/settings.schema.json",
+	"defaultProvider": "nvidia",
+	"defaultModel": "nvidia/nemotron-3-ultra-550b-a55b",
+	"defaultThinkingLevel": "high",
+	"enabledModels": [
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/z-ai/glm-5.3-flash"
+	],
+	"defaultTools": ["+codemode"]
+}

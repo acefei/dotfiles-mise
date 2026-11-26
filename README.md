@@ -39,6 +39,7 @@ dotfiles/
 │   └── vim/                     # vimrc, plug_installer
 ├── agents/
 │   ├── claude/                  # settings.json, CLAUDE.md
+│   ├── pi/                      # settings.json (seed for the Pi agent)
 │   └── vscode/                  # settings.json, keybindings.json, extensions.txt
 ├── utility/                     # Scripts symlinked to ~/.local/bin
 ├── templates/                   # Cloud-init and Docker starter files
@@ -169,9 +170,20 @@ for the current figure before you add a plugin.
 ### Pi Coding Agent (NVIDIA NIM)
 
 `mise run setup-pi` installs [Pi](https://github.com/earendil-works/pi) if it is missing,
-seeds `~/.pi/agent/settings.json` once from `config/pi/agent/settings.json`, and asks the
-model one question when a key is available. Pi rewrites its settings file itself (`/model`,
-`/settings`), so the task never overwrites it.
+seeds `~/.pi/agent/settings.json` once from `agents/pi/settings.json`, and tests every model
+in its `enabledModels` when a key is available. Pi rewrites its settings file itself
+(`/model`, `/settings`), so the task never overwrites it. To take a new model list from the
+repo, delete `~/.pi/agent/settings.json` and run the task again.
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `defaultModel` | `nvidia/nemotron-3-ultra-550b-a55b` | The largest free model (550B, 1M context) |
+| `enabledModels` | the three free Nemotron models of build.nvidia.com, and `z-ai/glm-5.3-flash` | Cycle with Ctrl+P |
+| `defaultThinkingLevel` | `high` | Pi's default is `medium` |
+
+Pi sends no thinking parameter to NVIDIA models (checked with a local test server: the request
+is the same at `medium` and `high`), so the level changes what Pi shows and allows, not the
+request. The models reason on their own.
 
 The key comes from one of two places:
 
@@ -179,24 +191,22 @@ The key comes from one of two places:
 - **The secrets store**: `mise run setup-secrets` asks for the key (input hidden) and stores
   it. The first `secrets init` makes you type `BACKED-UP`, so this step needs a terminal.
 
-With no key, `setup-pi` skips the model check and still succeeds.
+With no key, `setup-pi` skips the model tests and still succeeds. With a key, it prints
+`PASS` or `FAIL` for each model and fails if one model fails.
 
 ```bash
 mise run setup-secrets      # store the key (asks on a terminal)
-mise run setup-pi           # install Pi, seed settings, check the model
+mise run setup-pi           # install Pi, seed settings, test the models
 secrets exec -- pi          # run Pi with the key from the store
 ```
 
 #### GitHub Actions / CI
 
-CI sets `NVIDIA_API_KEY` from the repository secret. The key stays in the environment and
-is not stored, so CI needs no age key and no `BACKED-UP` answer. Without the repository
-secret, the model check is skipped.
-
-```yaml
-env:
-  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-```
+The key is an **environment secret** named `NVIDIA_API_KEY` in the environment
+`NVIDIA_API_KEY`. A job sees it only when it names the environment, so each job has
+`environment: NVIDIA_API_KEY`. The key stays in the environment variable and is not stored,
+so CI needs no age key and no `BACKED-UP` answer. Without the secret, the model tests are
+skipped.
 
 ## Development
 
