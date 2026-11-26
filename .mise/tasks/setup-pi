@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#MISE description="Configure Pi Coding Agent (settings, extensions, subagents, skills)"
+set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+PI_AGENT_DIR="$HOME/.pi/agent"
+
+echo "Setting up Pi Coding Agent..."
+
+# Ensure Pi agent directory exists
+install -d "$PI_AGENT_DIR"
+
+# Copy settings.json (Pi writes this itself, so seed once)
+copy_once "$MISE_PROJECT_ROOT/config/pi/agent/settings.json" "$PI_AGENT_DIR/settings.json"
+
+# Copy extensions (subagent extension)
+for ext_dir in "$MISE_PROJECT_ROOT/config/pi/agent/extensions"/*/; do
+    [[ -d "$ext_dir" ]] || continue
+    ext_name=$(basename "$ext_dir")
+    target_dir="$PI_AGENT_DIR/extensions/$ext_name"
+    install -d "$target_dir"
+    # Extensions are source files, link them so updates propagate
+    for f in "$ext_dir"/*; do
+        [[ -f "$f" ]] || continue
+        link_config "$f" "$target_dir/$(basename "$f")"
+    done
+    echo "Linked extension: $ext_name"
+done
+
+# Copy subagents (agent definitions for subagent extension)
+for agent_file in "$MISE_PROJECT_ROOT/config/pi/agent/agents"/*.md; do
+    [[ -f "$agent_file" ]] || continue
+    link_config "$agent_file" "$PI_AGENT_DIR/agents/$(basename "$agent_file")"
+done
+echo "Linked subagents"
+
+# Copy prompt templates (workflow prompts)
+for prompt_file in "$MISE_PROJECT_ROOT/config/pi/agent/prompts"/*.md; do
+    [[ -f "$prompt_file" ]] || continue
+    link_config "$prompt_file" "$PI_AGENT_DIR/prompts/$(basename "$prompt_file")"
+done
+echo "Linked prompt templates"
+
+# Global AGENTS.md (personal always-on instructions)
+# Same strategy as Claude: symlink if none exists, otherwise import
+local agents_md="$PI_AGENT_DIR/AGENTS.md"
+local repo_agents_md="$MISE_PROJECT_ROOT/config/pi/agent/AGENTS.md"
+if [[ -f "$repo_agents_md" ]]; then
+    if [[ -e "$agents_md" && ! -L "$agents_md" ]]; then
+        if grep -qF "@$repo_agents_md" "$agents_md"; then
+            echo "Pi AGENTS.md already imports the repo file"
+        else
+            printf '\n@%s\n' "$repo_agents_md" >> "$agents_md"
+            echo "Imported the repo AGENTS.md from your existing $agents_md"
+        fi
+    else
+        link_config "$repo_agents_md" "$agents_md"
+    fi
+fi
+
+# Check if Pi is installed
+if command -v pi &>/dev/null; then
+    echo "Pi is installed: $(pi --version)"
+else
+    echo "Pi not installed. Install with: curl -fsSL https://pi.dev/install.sh | sh"
+fi
+
+echo "Pi setup complete!"

@@ -14,13 +14,13 @@ curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.s
 
 ```
 dotfiles/
-├── mise.toml               # Tools, env vars, and simple tasks
-├── install.sh              # Fresh-machine bootstrap entry point
+├── mise.toml                    # Tools, env vars, and simple tasks
+├── install.sh                   # Fresh-machine bootstrap entry point
 ├── lib/
-│   └── utils.sh            # Shared bash helpers (is_mac, download, …)
+│   └── utils.sh                 # Shared bash helpers (is_mac, download, …)
 ├── shell/
-│   ├── profile             # Interactive shell setup, sourced from ~/.bash_profile
-│   ├── dynamic_source_all  # Sources every shell/_* file at login
+│   ├── profile                  # Interactive shell setup, sourced from ~/.bash_profile
+│   ├── dynamic_source_all       # Sources every shell/_* file at login
 │   ├── _aliases
 │   ├── _functions
 │   ├── _fzf
@@ -28,17 +28,18 @@ dotfiles/
 │   ├── _prompt
 │   └── _worktree
 ├── config/
-│   ├── mise/tools.toml     # Tools + env, linked to ~/.config/mise/config.toml
-│   ├── git/                # gitconfig, gitignore_global
-│   ├── tmux/               # tmux.conf
-│   └── vim/                # vimrc, plug_installer
+│   ├── mise/tools.toml          # Tools + env, linked to ~/.config/mise/config.toml
+│   ├── git/                     # gitconfig, gitignore_global
+│   ├── tmux/                    # tmux.conf
+│   ├── vim/                     # vimrc, plug_installer
+│   └── pi/agent/                # Pi Coding Agent config (settings, extensions, subagents, skills)
 ├── agents/
-│   ├── claude/             # settings.json, hooks/
-│   └── vscode/             # settings.json, keybindings.json, extensions.txt
-├── utility/                # Scripts symlinked to ~/.local/bin
-├── templates/              # Cloud-init and Docker starter files
-├── docs/                   # Reference docs (git aliases, fzf, worktrees, secrets)
-└── .mise/tasks/            # One executable script per setup-* task
+│   ├── claude/                  # settings.json, CLAUDE.md
+│   └── vscode/                  # settings.json, keybindings.json, extensions.txt
+├── utility/                     # Scripts symlinked to ~/.local/bin
+├── templates/                   # Cloud-init and Docker starter files
+├── docs/                        # Reference docs (git aliases, fzf, worktrees, secrets)
+└── .mise/tasks/                 # One executable script per setup-* task
 ```
 
 Two mise files, on purpose: `config/mise/tools.toml` is your **global** config
@@ -75,8 +76,8 @@ change it.
 |---|---|---|
 | Only you | **Symlink** — edit it in the repo and the change is live at once; `git status` here is the whole drift report | `tmux.conf`, `vimrc`, `gitignore_global`, `utility/*`, `mise/tools.toml` |
 | You **and** a tool | **Include** — one line in a machine-local file pulls in the repo file, so the tool writes locally and the repo stays clean | `~/.gitconfig`, `~/.bash_profile`, `~/.bashrc` |
-| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json` |
-| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md` |
+| Mostly the tool | **Copy once, never clobber** — the repo file is a seed, drift is expected | Claude `settings.json`, VSCode `settings.json` / `keybindings.json`, Pi `settings.json` |
+| You already have your own | **Adopt** — keep what is there and attach the repo's beside it | existing `~/.claude/CLAUDE.md`, `~/.pi/agent/AGENTS.md` |
 
 Never symlink a file a tool rewrites. `git config --global` in particular writes
 *through* a symlink, so a linked `~/.gitconfig` would put machine-local values in
@@ -140,26 +141,81 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
+### Claude Code + VSCode
+
 `mise run setup-agents` sets up Claude Code and VSCode together. To change which
 marketplaces or plugins you get, edit the lists at the top of
 `.mise/tasks/setup-agents`.
 
-### Claude Code plugins
-
-All of them come from one marketplace, [`acefei/agent-accelerator`](https://github.com/acefei/agent-accelerator),
-which re-publishes the external plugins at a pinned commit. What each one is for, and what
-it costs you in context:
+#### Claude Code plugins (from `acefei/agent-accelerator`)
 
 | Plugin | For | Context |
 | --- | --- | --- |
 | `mattpocock-skills` | Idea → spec → tickets → implementation, with grilling up front | ~1.2k tok |
 | `accelerator-core` | Speak replies aloud; safe remote work over SSH | ~190 tok |
 | `accelerator-loops` | Long jobs that run to a checkable finish line | ~150 tok |
-| `simple-english` | ASD-STE100 writing skill + the `simple-english` output style | ~150 tok |
+| `simple-english` | ASD-STE100 writing skill + `simple-english` output style | ~150 tok |
 | `gh-skills` | `gh` and `gh-skill` skills from `cli/cli` | ~90 tok |
 
-That context cost is paid in **every** session — run `claude plugin details <plugin>`
+Context cost is paid in **every** session — run `claude plugin details <plugin>`
 for the current figure before you add a plugin.
 
 **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 
+### Pi Coding Agent
+
+`mise run setup-pi` sets up Pi Coding Agent (settings, extensions, subagents, skills).
+
+```bash
+mise run setup-pi           # just Pi
+mise run bootstrap          # includes Pi + all other tasks
+```
+
+#### Pi configuration (in `config/pi/agent/`)
+
+| Component | Purpose |
+|---|---|
+| `settings.json` | Model, tools (codemode enabled), thinking levels |
+| `extensions/subagent/` | Subagent extension for parallel isolated agents |
+| `agents/*.md` | Subagent definitions (scout, planner, reviewer, worker) |
+| `prompts/*.md` | Workflow prompts (`/implement`, `/scout-and-plan`, `/implement-and-review`) |
+| `skills/` | Custom skills (tdd, code-review, api-design, diagnosing-bugs) |
+| `AGENTS.md` | Global instructions (shared with Claude) |
+
+#### Subagent extension usage
+
+```bash
+# In Pi session:
+Use scout to find all authentication code
+Run 3 scouts in parallel: models, providers, tests
+Use a chain: scout -> planner -> worker
+/implement add Redis caching
+```
+
+#### Skill marketplace overlap check
+
+The following custom skills overlap with `agent-accelerator` marketplace skills.
+Prefer marketplace skills (load on-demand, no context cost when unused) unless you need Pi-specific behavior (isolated process, different model).
+
+| Custom Skill | Marketplace Equivalent | Recommendation |
+|---|---|---|
+| `code-review` | `mattpocock-skills/code-review` | Use marketplace |
+| `diagnosing-bugs` | `mattpocock-skills/diagnosing-bugs` | Use marketplace |
+| `tdd` | `mattpocock-skills/tdd` | Use marketplace |
+| `api-design` | `mattpocock-skills/codebase-design` + `domain-modeling` | Use marketplace |
+| `subagents (scout/planner/reviewer/worker)` | `mattpocock-skills/implement` + `research` + `code-review` | Keep subagents for isolation |
+
+Marketplace skills available via `agent-accelerator`:
+- **Engineering**: `implement`, `research`, `prototype`, `tdd`, `code-review`, `codebase-design`, `domain-modeling`, `diagnosing-bugs`, `to-spec`, `to-tickets`, `triage`, `pr`, `improve-codebase-architecture`, `grill-with-docs`, `ask-matt`
+- **Productivity**: `grilling`, `grill-me`, `writing-for-agents`, `handoff`, `teach`, `wait-what`, `to-questionnaire`
+- **Core**: `remote-ssh-ops`, `secrets-cli` (accelerator-core)
+- **Writing**: `simple-english` (simple-english)
+- **GitHub**: `gh`, `gh-skill` (gh-skills)
+
+## Development
+
+```bash
+mise run bootstrap          # Full setup
+mise run setup-pi           # Pi only
+mise run setup-agents       # Claude + VSCode only
+```
