@@ -11,18 +11,17 @@ echo "Setting up Pi Coding Agent..."
 # Ensure Pi agent directory exists
 install -d "$PI_AGENT_DIR"
 
-# Generate settings.json with latest NVIDIA models only
+# Generate settings.json with latest available NVIDIA models only
 SETTINGS_FILE="$PI_AGENT_DIR/settings.json"
 cat > "$SETTINGS_FILE" << 'EOF'
 {
   "$schema": "https://pi.dev/schemas/settings.schema.json",
   "defaultProvider": "nvidia",
   "enabledModels": [
-    "nvidia/nemotron-3-ultra-253b-v1",
     "nvidia/nemotron-3-ultra-550b-a55b",
-    "nvidia/nemotron-3.5-super-vl-120b-a12b",
     "nvidia/nemotron-3.5-lightning",
-    "nvidia/nemotron-3.5-super-vl-120b-a12b-128k"
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "nvidia/cosmos-reason2-8b"
   ],
   "defaultTools": ["+codemode"],
   "hideThinkingBlock": false
