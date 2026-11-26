@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Configure Pi Coding Agent (settings, NVIDIA provider)"
+#MISE description="Configure Pi Coding Agent (settings, NVIDIA provider via secrets)"
 set -euo pipefail
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
@@ -10,10 +10,9 @@ echo "Setting up Pi Coding Agent..."
 # Ensure Pi agent directory exists
 install -d "$PI_AGENT_DIR"
 
-# Check for NVIDIA API key
+# Check for NVIDIA API key via secrets (set during install or manually)
 NVIDIA_API_KEY="${NVIDIA_API_KEY:-}"
 if [[ -z "$NVIDIA_API_KEY" ]]; then
-    # Check if already stored in secrets
     if command -v secrets &>/dev/null && secrets list 2>/dev/null | grep -q "NVIDIA_API_KEY"; then
         echo "NVIDIA_API_KEY found in secrets store"
         NVIDIA_API_KEY="$(secrets get NVIDIA_API_KEY 2>/dev/null || true)"
@@ -22,13 +21,13 @@ fi
 
 if [[ -z "$NVIDIA_API_KEY" ]]; then
     echo ""
-    echo "NVIDIA API key not found."
+    echo "NVIDIA API key not found in environment or secrets."
     echo "Get one at: https://build.nvidia.com/"
     echo ""
     read -rp "Enter NVIDIA API key (or press Enter to skip): " NVIDIA_API_KEY
     if [[ -n "$NVIDIA_API_KEY" ]]; then
         if command -v secrets &>/dev/null; then
-            echo "$NVIDIA_API_KEY" | secrets set NVIDIA_API_KEY
+            printf '%s' "$NVIDIA_API_KEY" | secrets set NVIDIA_API_KEY
             echo "Stored in secrets"
         else
             export NVIDIA_API_KEY
@@ -67,7 +66,7 @@ fi
 
 echo "Pi setup complete!"
 echo ""
-echo "To use Pi with NVIDIA models:"
-echo "  1. Ensure NVIDIA_API_KEY is set (in secrets or environment)"
-echo "  2. Run: pi"
-echo "  3. Run: /login -> select nvidia"
+echo "To run Pi with NVIDIA credentials from secrets:"
+echo "  secrets exec -- pi"
+echo ""
+echo "Then in Pi: /login -> select nvidia"

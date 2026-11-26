@@ -7,6 +7,11 @@ Personal development environment for Linux and macOS, managed by [mise](https://
 ## Quick start
 
 ```bash
+# Full bootstrap (interactive, prompts for NVIDIA API key)
+curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
+
+# GitHub Actions / CI: pre-set NVIDIA_API_KEY env var
+export NVIDIA_API_KEY=sk-...
 curl -fsSL https://raw.githubusercontent.com/acefei/dotfiles-mise/main/install.sh | sh
 ```
 
@@ -161,23 +166,44 @@ for the current figure before you add a plugin.
 
 **VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
 
-### Pi Coding Agent
+### Pi Coding Agent (NVIDIA NIM)
 
-`mise run setup-pi` configures Pi with NVIDIA provider and codemode enabled.
+**Installation flow** (handled by `install.sh`):
+
+1. **Check env** — `NVIDIA_API_KEY` (CI) or `secrets` store
+2. **Prompt** — If missing, ask user for key
+3. **Install secrets** — `mise install secrets` (sops+age)
+4. **Init secrets** — `secrets init` (creates age key)
+5. **Store key** — `secrets set NVIDIA_API_KEY`
+6. **Install Pi** — `curl -fsSL https://pi.dev/install.sh | sh`
+7. **Run Pi** — `secrets exec -- pi` (injects key, no env leak)
 
 ```bash
-mise run setup-pi           # just Pi (prompts for NVIDIA API key if needed)
-mise run bootstrap          # includes Pi + all other tasks
+mise run setup-pi           # Config only (generates settings.json)
+mise run bootstrap          # Full setup including Pi
 ```
 
-#### Requirements
-- **NVIDIA API key** from https://build.nvidia.com/
-- Stored via `secrets` (preferred) or `NVIDIA_API_KEY` env var
+#### GitHub Actions / CI
+```yaml
+# .github/workflows/ci.yml
+env:
+  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+```
+Pre-sets key in environment — installer skips prompt, uses env directly.
 
-#### What it does
-- Generates `~/.pi/agent/settings.json` with NVIDIA models
-- Enables `codemode` tool by default
-- Run `/login` in Pi and select `nvidia` provider
+#### Manual run (after bootstrap)
+```bash
+# Runs Pi with NVIDIA key from secrets (no env exposure)
+secrets exec -- pi
+
+# In Pi session:
+/login  # Select 'nvidia' provider
+```
+
+#### What `setup-pi` does
+- Generates `~/.pi/agent/settings.json` with NVIDIA models + codemode
+- Checks `secrets` / env for `NVIDIA_API_KEY`
+- Prompts if missing (interactive only)
 
 ## Development
 
