@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-#MISE description="Configure Pi Coding Agent (settings, NVIDIA provider via secrets)"
+#MISE description="Configure Pi Coding Agent (settings, NVIDIA provider) and run Pi"
+#MISE depends=["setup-secrets"]
 set -euo pipefail
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
@@ -9,32 +10,6 @@ echo "Setting up Pi Coding Agent..."
 
 # Ensure Pi agent directory exists
 install -d "$PI_AGENT_DIR"
-
-# Check for NVIDIA API key via secrets (set during install or manually)
-NVIDIA_API_KEY="${NVIDIA_API_KEY:-}"
-if [[ -z "$NVIDIA_API_KEY" ]]; then
-    if command -v secrets &>/dev/null && secrets list 2>/dev/null | grep -q "NVIDIA_API_KEY"; then
-        echo "NVIDIA_API_KEY found in secrets store"
-        NVIDIA_API_KEY="$(secrets get NVIDIA_API_KEY 2>/dev/null || true)"
-    fi
-fi
-
-if [[ -z "$NVIDIA_API_KEY" ]]; then
-    echo ""
-    echo "NVIDIA API key not found in environment or secrets."
-    echo "Get one at: https://build.nvidia.com/"
-    echo ""
-    read -rp "Enter NVIDIA API key (or press Enter to skip): " NVIDIA_API_KEY
-    if [[ -n "$NVIDIA_API_KEY" ]]; then
-        if command -v secrets &>/dev/null; then
-            printf '%s' "$NVIDIA_API_KEY" | secrets set NVIDIA_API_KEY
-            echo "Stored in secrets"
-        else
-            export NVIDIA_API_KEY
-            echo "Set for current session (export NVIDIA_API_KEY)"
-        fi
-    fi
-fi
 
 # Generate settings.json with NVIDIA models
 SETTINGS_FILE="$PI_AGENT_DIR/settings.json"
@@ -62,11 +37,13 @@ if command -v pi &>/dev/null; then
     echo "Pi is installed: $(pi --version)"
 else
     echo "Pi not installed. Install with: curl -fsSL https://pi.dev/install.sh | sh"
+    exit 1
 fi
 
-echo "Pi setup complete!"
+# Run Pi with secrets (validates model works)
+# In CI: runs once and exits (-p flag)
+# Interactive: would start full session, but we use -p for validation
 echo ""
-echo "To run Pi with NVIDIA credentials from secrets:"
-echo "  secrets exec -- pi"
-echo ""
-echo "Then in Pi: /login -> select nvidia"
+echo "Validating NVIDIA model via Pi..."
+secrets exec -- pi -p "Say 'OK' if NVIDIA model responds"
+echo "Pi validation complete!"

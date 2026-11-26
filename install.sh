@@ -168,85 +168,6 @@ ensure_github_token() {
     esac
 }
 
-ensure_nvidia_key() {
-    # Check for NVIDIA_API_KEY in environment (for CI/GitHub Actions)
-    if [ -n "${NVIDIA_API_KEY:-}" ]; then
-        echo "NVIDIA_API_KEY found in environment"
-        return 0
-    fi
-
-    # Check if secrets is available and has the key
-    if command -v secrets >/dev/null 2>&1; then
-        if secrets list 2>/dev/null | grep -q "NVIDIA_API_KEY"; then
-            echo "NVIDIA_API_KEY found in secrets store"
-            return 0
-        fi
-    fi
-
-    # Prompt user for API key
-    echo ""
-    echo "NVIDIA API key required for Pi Coding Agent (NVIDIA NIM provider)"
-    echo "Get one at: https://build.nvidia.com/"
-    echo ""
-    printf "Enter NVIDIA API key (or press Enter to skip Pi setup): "
-    if [ -r /dev/tty ]; then
-        read -r NVIDIA_API_KEY </dev/tty || NVIDIA_API_KEY=""
-    else
-        read -r NVIDIA_API_KEY || NVIDIA_API_KEY=""
-    fi
-
-    if [ -z "$NVIDIA_API_KEY" ]; then
-        echo "Skipping Pi NVIDIA setup. You can run 'mise run setup-pi' later."
-        return 0
-    fi
-
-    # Install secrets if not available
-    if ! command -v secrets >/dev/null 2>&1; then
-        echo "Installing secrets (sops+age) via mise..."
-        mise install secrets
-    fi
-
-    # Initialize secrets store if needed
-    if ! secrets list >/dev/null 2>&1; then
-        echo "Initializing secrets store (age key will be created)..."
-        secrets init
-    fi
-
-    # Store the API key
-    printf '%s' "$NVIDIA_API_KEY" | secrets set NVIDIA_API_KEY
-    echo "NVIDIA_API_KEY stored in secrets"
-    export NVIDIA_API_KEY
-}
-
-install_tools() {
-    echo "Installing tools..."
-    mise install
-}
-
-install_pi() {
-    echo "Installing Pi Coding Agent..."
-    if ! command -v pi >/dev/null 2>&1; then
-        curl -fsSL https://pi.dev/install.sh | sh
-        export PATH="$HOME/.local/bin:$PATH"
-    else
-        echo "Pi already installed: $(pi --version)"
-    fi
-}
-
-run_bootstrap() {
-    echo "Running bootstrap..."
-    mise run bootstrap
-}
-
-run_pi_with_secrets() {
-    if command -v pi >/dev/null 2>&1; then
-        echo ""
-        echo "Starting Pi with NVIDIA credentials from secrets..."
-        echo "Run /login in Pi and select 'nvidia' provider."
-        secrets exec -- pi
-    fi
-}
-
 # ── Flow ────────────────────────────────────────────────────────────────────
 # One pipeline. --update pulls first and skips the fresh-machine-only steps.
 run_install() {
@@ -263,14 +184,19 @@ run_install() {
     normalize_task_perms
     if [ "$MODE" = bootstrap ]; then
         ensure_github_token
-        ensure_nvidia_key
         install_tools
-        install_pi
     fi
     run_bootstrap
-    if [ "$MODE" = bootstrap ]; then
-        run_pi_with_secrets
-    fi
+}
+
+install_tools() {
+    echo "Installing tools..."
+    mise install
+}
+
+run_bootstrap() {
+    echo "Running bootstrap..."
+    mise run bootstrap
 }
 
 main() {
