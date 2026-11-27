@@ -160,7 +160,8 @@ reports each step that failed, but always runs the audit last:
 | Skills | `lib/agents/skills.sh` | Installs standalone skills for the agents each entry names |
 | Audit | `lib/agents/audit.sh` | Reports a skill installed twice for one agent |
 
-A tool that is not installed is skipped with a message. Change what gets installed by editing the
+A tool that is not installed is skipped with a message, except in CI (`CI=true`), where a missing
+Claude Code, Pi or Herdr fails the task. Change what gets installed by editing the
 lists at the top of the matching file: `CLAUDE_MARKETPLACES` and `CLAUDE_PLUGINS`, `PI_PACKAGES`,
 `SKILL_SETS`. The task depends on `setup-secrets`, which asks for the NVIDIA key (see Pi).
 
@@ -209,8 +210,10 @@ The key comes from one of two places:
 - **The secrets store**: `mise run setup-secrets` asks for the key (input hidden) and stores
   it. The first `secrets init` makes you type `BACKED-UP`, so this step needs a terminal.
 
-With no key, the model tests are skipped and the task still succeeds. With a key, it prints `PASS` or
-`FAIL` for each model and fails if one model fails. Run Pi with the stored key: `secrets exec -- pi`.
+The model tests call the NVIDIA API once per model, so they run only in CI or with `PI_TEST_MODELS=1`, each
+with a 180 s limit where `timeout` exists. They test the models in your effective `~/.pi/agent/settings.json`,
+print `PASS` or `FAIL` per model, and fail if one model fails; with no key they are skipped. Run Pi with the
+stored key: `secrets exec -- pi`.
 
 #### Extensions
 
@@ -261,8 +264,8 @@ The last step lists a skill that is installed twice. It judges per agent, becaus
 own folders (Claude: `~/.claude/skills` and enabled plugins; Pi: `~/.agents/skills` and Pi packages). It
 reports a skill name in two different folders for **one** agent, for example a standalone skill that a
 Claude plugin also ships. Symlinks to the same folder are not duplicates. The same skill once for Claude
-(plugin) and once for Pi is only a note, because each agent needs its own copy. The audit warns;
-`AUDIT_SKILLS_STRICT=1` makes the task fail, and CI sets it.
+(plugin) and once for Pi is only a note, because each agent needs its own copy. A duplicate fails the task;
+the audit is mandatory and has no switch.
 
 ### Herdr: the workspace for parallel agents
 

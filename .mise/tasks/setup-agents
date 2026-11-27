@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #MISE description="Install and configure the AI coding agents (VSCode, Claude Code, Pi) and their skills, then audit duplicate skills"
 #MISE depends=["setup-secrets"]
+set -uo pipefail
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
-for part in vscode claude pi skills audit; do
+for part in common vscode claude pi skills audit; do
     source "$MISE_PROJECT_ROOT/lib/agents/$part.sh"
 done
 

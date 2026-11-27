@@ -37,14 +37,16 @@ shell|dotenv|json`, and `--on-missing throw|empty|keep`.
 ```bash
 secrets export --format dotenv > backup.env    # plaintext: protect it, delete it after use
 secrets import backup.env                      # or: secrets import < backup.env
-secrets import --skip-existing other.env       # keep the values already in the store
+secrets import --overwrite new.env             # replace values that already exist
 ```
 
 `export --format dotenv` quotes a value that holds a space, a quote, a backslash or a newline, so
 `import` restores every value exactly. `import` reads `KEY=VALUE` lines, an optional `export ` prefix,
-`#` comments, and single- or double-quoted values (`\n` and `\"` work inside double quotes). A line
+`#` comments, and single- or double-quoted values. Inside double quotes `\n`, `\t`, `\r`, `\\` and `\"` are
+escapes and any other backslash stays as written; single quotes are always literal (use them for `C:\temp`). A line
 that is not `KEY=VALUE` stops the import with its line number; an empty value is skipped, as in
-`secrets set`. By default an existing name is overwritten. The output lists names, never values.
+`secrets set`. An existing name is kept unless you pass `--overwrite`, so importing an old file cannot silently
+replace a live credential. The output lists names, never values.
 
 ## Scope
 

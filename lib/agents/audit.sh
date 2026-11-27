@@ -98,7 +98,7 @@ audit_report() {
     echo "Skill audit: $total skill entries in $folders folders, $dups duplicate group(s)"
     if [[ "$dups" -gt 0 ]]; then
         echo "Remove one copy: a SKILL_SETS entry in lib/agents/skills.sh, or a plugin in lib/agents/claude.sh."
-        [[ "${AUDIT_SKILLS_STRICT:-}" == "1" ]] && return 1
+        return 1
     fi
     return 0
 }

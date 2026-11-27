@@ -6,7 +6,8 @@ source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 if ! command -v herdr &>/dev/null; then
     echo "herdr not found. Run: mise install" >&2
-    exit 1
+    [[ "${CI:-}" != "true" ]]
+    exit $?
 fi
 
 install -d "$HOME/.config/herdr"

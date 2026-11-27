@@ -31,8 +31,8 @@ ensure_claude_runnable() {
 
 setup_claude() {
     if ! ensure_claude_runnable; then
-        echo "Claude Code CLI not available or not runnable, skipping Claude setup"
-        return 0
+        skip_or_fail "Claude Code CLI not available or not runnable, skipping Claude setup"
+        return $?
     fi
 
     local claude_dir="$HOME/.claude"
@@ -53,7 +53,7 @@ setup_claude() {
         link_config "$repo_claude_md" "$claude_md"
     fi
 
-    local marketplace plugin marketplace_name
+    local marketplace plugin marketplace_name failed=""
 
     for marketplace in "${CLAUDE_MARKETPLACES[@]}"; do
         echo "Registering Claude plugin marketplace: $marketplace"
@@ -65,7 +65,10 @@ setup_claude() {
 
     for plugin in "${CLAUDE_PLUGINS[@]}"; do
         echo "Installing Claude plugin: $plugin"
-        claude plugin install "$plugin" \
-            || echo "Plugin install failed for $plugin, continuing"
+        claude plugin install "$plugin" || failed="$failed $plugin"
     done
+    if [[ -n "$failed" ]]; then
+        echo "Plugin install failed for:$failed" >&2
+        return 1
+    fi
 }
