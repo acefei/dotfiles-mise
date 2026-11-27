@@ -233,15 +233,34 @@ mise installs and updates Herdr, so the config turns off `herdr update`.
 Start it with `herdr`. For several tasks at once, from a shell inside Herdr:
 
 ```bash
-cd ~/xenserver-repo
+cd ~/xen-api                                                # any git checkout
 xs-agents -k claude private/feis/fix-a private/feis/fix-b   # one worktree + agent + build shell each
 xs-agents -k pi private/feis/spike-c
 ```
 
 `xs-agents` (in `utility/`) makes a git worktree and a Herdr workspace per branch, starts the
 agent in the first pane, and leaves a second pane for builds. Your main checkout stays untouched.
-Remove a finished one with `herdr worktree remove`. Herdr reopens Pi and Claude Code panes in their
-own conversation after a restart (`resume_agents_on_restore`).
+Herdr reopens Pi and Claude Code panes in their own conversation after a restart
+(`resume_agents_on_restore`).
+
+#### A working day on XenServer code, without VSCode
+
+| Step | In Herdr |
+| --- | --- |
+| Start a task | `xs-agents -k claude private/feis/<task>` in the repo; the sidebar shows one workspace per task |
+| Let the agent work | first pane; the sidebar marks the agent that waits for you, so you can switch to it |
+| Build and test | second pane of the same workspace (`make`, `opam`, `dune`, a XenRT submit, ...) |
+| Edit by hand | `vim` in the build pane (`setup-vim`), or ask the agent |
+| Review | `git diff` (uses `delta`) or `lazygit` in the build pane |
+| Finish | push from the worktree, then `herdr worktree remove` for that workspace |
+
+Pi's `pi-lens` runs `ruff` and `shellcheck` after each edit, so the agent sees lint errors
+without an editor. VSCode stays available (`setup-agents` still seeds it) for the cases where
+you want its debugger or language-server UI.
+
+Tested: workspaces, worktrees, the build pane and both agent kinds start and report their state in
+Herdr (Pi against a real `xen-api` clone; Claude Code against a local fake API, because the test host
+cannot reach Anthropic). Your own machine's Claude access decides whether the Claude agent can answer.
 
 ### Lint and editor config
 
