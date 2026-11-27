@@ -249,7 +249,10 @@ own conversation after a restart (`resume_agents_on_restore`).
 `~/.config/ruff/ruff.toml`, `~/.shellcheckrc` and `~/.editorconfig`. A project's own file always
 wins. `pi-lens` (Pi's diagnostics) does not use the user-level ruff file: it looks for `ruff.toml`
 and `.shellcheckrc` from the edited file up to `$HOME`, and otherwise uses its own rules. So put the
-rules you want Pi to enforce in each repo. The tools (`ruff`, `shellcheck`, `shfmt`, and others) come
+rules you want Pi to enforce in each repo (this repo does: `.shellcheckrc` and `.editorconfig` at the
+root link to `config/lint/`). The extensions `pi-web-access`, `pi-subagents`, `context-mode` and `pi-fff` run
+with their defaults, apart from the `pi-fff` seed: Pi works with no key for the first three, and `pi-web-access`
+uses its keyless search unless you add a provider key to `~/.pi/agent/web-search.json`. The tools (`ruff`, `shellcheck`, `shfmt`, and others) come
 from `config/mise/tools.toml`.
 
 ### Skills (Claude Code + Pi)
