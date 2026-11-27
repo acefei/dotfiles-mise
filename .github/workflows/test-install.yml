@@ -61,6 +61,7 @@ jobs:
       - name: Run install script
         env:
           CI: "true"
+          AUDIT_SKILLS_STRICT: "1"
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
@@ -80,6 +81,7 @@ jobs:
       - name: Run install script
         env:
           CI: "true"
+          AUDIT_SKILLS_STRICT: "1"
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}

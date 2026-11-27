@@ -254,20 +254,21 @@ from `config/mise/tools.toml`.
 
 ### Skills (Claude Code + Pi)
 
-`setup-agents` installs both. Marketplace plugins go to **Claude Code only**. Standalone skills go to
-**Claude Code and Pi**: it runs the pinned
-[`skills`](https://github.com/vercel-labs/skills) CLI once per entry in `SKILL_SETS`, for the
-agents in `SKILL_AGENTS`. Each skill is on disk once, in `~/.agents/skills` (Pi reads it).
+`setup-agents` installs both. Marketplace plugins go to **Claude Code only**. Standalone skills go to the agents you name
+(**Claude Code, Pi, or both**): it runs the pinned
+[`skills`](https://github.com/vercel-labs/skills) CLI once per entry in `SKILL_SETS`. Each skill is on disk once, in `~/.agents/skills` (Pi reads it).
 `~/.claude/skills` holds links to the same folders. The CLI telemetry is turned off.
 
-To add skills, add a line `"<repo>@<commit> <skill> <skill>"` to `SKILL_SETS` in
-`.mise/tasks/setup-agents`. The commit pins the content.
+To add skills, add a line `"<agents> <repo>@<commit> <skill> <skill>"` to `SKILL_SETS` in
+`.mise/tasks/setup-agents`. `agents` is `claude-code`, `pi`, or `claude-code,pi`. The commit pins
+the content.
 
-`mise run audit-skills` is the last step of `bootstrap` (it waits for `setup-agents` and `setup-pi`). It lists a skill that is installed twice:
-the same name in two different folders (for example a Claude plugin and `~/.agents/skills`),
-or the same `SKILL.md` under two names. It only warns; set `AUDIT_SKILLS_STRICT=1` to make it fail.
-The default `grilling` and `grill-me` are also in the `mattpocock-skills` plugin, so the audit
-reports them. Fix it by dropping that plugin from `CLAUDE_PLUGINS` or `claude-code` from `SKILL_AGENTS`.
+`mise run audit-skills` is the last step of `bootstrap` (it waits for `setup-agents` and `setup-pi`).
+It lists a skill that is installed twice: the same name in two different folders (for example a
+Claude plugin and `~/.agents/skills`). Symlinks to the same folder are not duplicates. It only
+warns; set `AUDIT_SKILLS_STRICT=1` to make it fail. The default set `grilling` and `grill-me` goes
+to Pi only, because Claude already gets them from the `mattpocock-skills` plugin; give a skill to
+`claude-code` only when no plugin provides it.
 
 ## Development
 

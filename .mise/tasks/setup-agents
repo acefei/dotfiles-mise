@@ -125,34 +125,35 @@ setup_claude() {
     done
 }
 
-# Standalone skills for Claude Code AND Pi (the marketplace plugins above are Claude only).
-# pi reads ~/.agents/skills, and the skills CLI links ~/.claude/skills to the same files,
-# so each skill is on disk once. A plugin can still ship the same skill: audit-skills reports it.
+# Standalone skills, installed with the pinned skills CLI. pi reads ~/.agents/skills, and the CLI
+# links ~/.claude/skills to the same files, so each skill is on disk once for any agent set.
+# A plugin can ship the same skill: audit-skills reports it, so name a skill for Claude here
+# only when no plugin above already provides it.
 
 # The skills CLI runs code from npm: pin it.
 SKILLS_CLI="skills@1.9.1"
 
-SKILL_AGENTS=(claude-code pi)
-
-# "<repo>@<commit> <skill> <skill> ...". The commit pins the skills: raise it on purpose.
+# "<agents> <repo>@<commit> <skill> <skill> ..."  agents = claude-code, pi, or claude-code,pi.
+# The commit pins the skills: raise it on purpose.
+# grilling and grill-me reach Claude through the mattpocock-skills plugin, so only Pi gets them here.
 SKILL_SETS=(
-    "mattpocock/skills@49dd158d1076134a641b33efb035946536778336 grilling grill-me"
+    "pi mattpocock/skills@49dd158d1076134a641b33efb035946536778336 grilling grill-me"
 )
 
-# DISABLE_TELEMETRY / DO_NOT_TRACK: without them the CLI sends anonymous usage data and security-audit requests to skills.sh.
-
 install_skill_set() {
-    local entry=$1 source names name agent
-    source=${entry%% *}
-    names=${entry#* }
+    local agents source names rest name agent
+    agents=${1%% *}
+    rest=${1#* }
+    source=${rest%% *}
+    names=${rest#* }
     local args=()
     for name in $names; do
         args+=(--skill "$name")
     done
-    for agent in "${SKILL_AGENTS[@]}"; do
+    for agent in ${agents//,/ }; do
         args+=(-a "$agent")
     done
-    echo "Installing skills from $source: $names"
+    echo "Installing skills from $source for $agents: $names"
     DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 npx --yes "$SKILLS_CLI" add "$source" "${args[@]}" -g -y </dev/null
 }
 
@@ -163,13 +164,13 @@ setup_skills() {
     fi
     local entry failed=""
     for entry in "${SKILL_SETS[@]}"; do
-        install_skill_set "$entry" || failed="$failed ${entry%% *}"
+        install_skill_set "$entry" || failed="$failed $(cut -d' ' -f2 <<<"$entry")"
     done
     if [[ -n "$failed" ]]; then
         echo "Failed to install skills from:$failed" >&2
         return 1
     fi
-    echo "Skills installed for: ${SKILL_AGENTS[*]}"
+    echo "Skills installed"
 }
 
 setup_vscode

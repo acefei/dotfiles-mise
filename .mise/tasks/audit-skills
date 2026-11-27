@@ -102,7 +102,7 @@ grep -v '^SUMMARY ' "$rows.names" || true
 dups=$(awk '/^SUMMARY / { print $2 }' "$rows.names")
 echo "Skill audit: $total skill entries in $folders folders, $dups duplicate group(s)"
 if [[ "$dups" -gt 0 ]]; then
-    echo "Remove the extra copy: drop an agent from SKILL_AGENTS, or a plugin from CLAUDE_PLUGINS."
+    echo "Remove the extra copy: remove the agent from that SKILL_SETS entry in setup-agents, or the plugin from CLAUDE_PLUGINS."
     [[ "${AUDIT_SKILLS_STRICT:-}" == "1" ]] && exit 1
 fi
 exit 0
