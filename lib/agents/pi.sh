@@ -53,11 +53,11 @@ pi_check_models() {
         echo "Model tests skipped (they call the NVIDIA API once per model). Run them with PI_TEST_MODELS=1."
         return 0
     fi
-    local run=() limit=()
+    local run=() limit=() seconds="${PI_MODEL_TEST_TIMEOUT:-600}"
     if command -v timeout &>/dev/null; then
-        limit=(timeout 180)
+        limit=(timeout "$seconds")
     elif command -v gtimeout &>/dev/null; then
-        limit=(gtimeout 180)
+        limit=(gtimeout "$seconds")
     fi
     local settings="$PI_AGENT_DIR/settings.json"
     [[ -f "$settings" ]] || settings="$PI_SEED"
