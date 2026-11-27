@@ -264,11 +264,12 @@ To add skills, add a line `"<agents> <repo>@<commit> <skill> <skill>"` to `SKILL
 the content.
 
 `mise run audit-skills` is the last step of `bootstrap` (it waits for `setup-agents` and `setup-pi`).
-It lists a skill that is installed twice: the same name in two different folders (for example a
-Claude plugin and `~/.agents/skills`). Symlinks to the same folder are not duplicates. It only
-warns; set `AUDIT_SKILLS_STRICT=1` to make it fail. The default set `grilling` and `grill-me` goes
-to Pi only, because Claude already gets them from the `mattpocock-skills` plugin; give a skill to
-`claude-code` only when no plugin provides it.
+It judges duplicates per agent, because an agent loads only its own folders (Claude: `~/.claude/skills`
+and enabled plugins; Pi: `~/.agents/skills` and Pi packages). It reports a skill name that sits in two
+different folders for **one** agent, for example a standalone skill that a Claude plugin also ships.
+Symlinks to the same folder are not duplicates. The same skill once for Claude (plugin) and once for
+Pi is only a note, since each agent needs its own copy; that is why `grilling` and `grill-me` go to Pi
+only by default. The audit warns; `AUDIT_SKILLS_STRICT=1` makes it fail (CI sets it).
 
 ## Development
 

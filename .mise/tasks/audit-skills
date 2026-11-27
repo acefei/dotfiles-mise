@@ -3,11 +3,16 @@
 #MISE wait_for=["setup-agents", "setup-pi"]
 set -euo pipefail
 
-# Read-only. A skill counts once per real folder: a symlink to the same folder is not a
-# duplicate. Two different folders with the same skill name are reported. Set AUDIT_SKILLS_STRICT=1 to fail on them.
+# Read-only. Duplicates are judged per agent, because an agent loads only its own folders:
+#   claude: ~/.claude/skills and enabled Claude plugins
+#   pi:     ~/.agents/skills and Pi packages
+# A skill counts once per real folder (a symlink to the same folder is not a duplicate). Two
+# different folders with the same skill name for ONE agent are reported. The same skill in
+# one folder per agent (a Claude plugin and a Pi copy) is only a note: each agent needs its own.
+# Set AUDIT_SKILLS_STRICT=1 to fail on duplicates.
 
 rows=$(mktemp)
-trap 'rm -f "$rows" "$rows.names"' EXIT
+trap 'rm -f "$rows" "$rows.names" "$rows.agent" "$rows.notes"' EXIT
 
 hash_file() {
     if command -v sha256sum &>/dev/null; then
@@ -81,28 +86,43 @@ audit_pi_packages
 total=$(wc -l <"$rows" | tr -d ' ')
 folders=$(cut -f4 "$rows" | sort -u | wc -l | tr -d ' ')
 
-# Same name in two different folders.
-sort -t$'\t' -k2,2 -k4,4 "$rows" | awk -F'\t' '
+# Rows get an agent column, then: same name in two different folders for one agent.
+awk -F'\t' 'BEGIN { OFS = "\t" }
+    { a = ($1 ~ /^(claude-)/) ? "claude" : "pi"; print $0, a }' "$rows" >"$rows.agent"
+
+sort -t$'\t' -k5,5 -k2,2 -k4,4 "$rows.agent" | awk -F'\t' '
     function flush(   i) {
         if (n > 1) {
             dup++
-            printf "DUPLICATE name: %s\n", cur
+            printf "DUPLICATE for %s: %s\n", agent, cur
             for (i = 1; i <= n; i++) printf "    %s\n      %s  sha256:%s\n", lab[i], dir[i], substr(h[i], 1, 12)
         }
         n = 0
     }
     {
-        if ($2 != cur) { flush(); cur = $2 }
+        key = $5 SUBSEP $2
+        if (key != curkey) { flush(); curkey = key; cur = $2; agent = $5 }
         if (n > 0 && dir[n] == $4) lab[n] = lab[n] ", " $1
         else { n++; lab[n] = $1; dir[n] = $4; h[n] = $3 }
     }
     END { flush(); print "SUMMARY " dup + 0 }' >"$rows.names"
 
+# Same name, a different folder per agent: expected, so only a note.
+sort -t$'\t' -k2,2 "$rows.agent" | awk -F'\t' '
+    function note() { if (nd > 1 && na > 1) printf "NOTE: %s is on disk once per agent (claude and pi each need their own copy)\n", cur }
+    $2 != cur { note(); cur = $2; nd = 0; na = 0; sd = ""; sa = "" }
+    {
+        if (index(sd, "|" $4 "|") == 0) { nd++; sd = sd "|" $4 "|" }
+        if (index(sa, "|" $5 "|") == 0) { na++; sa = sa "|" $5 "|" }
+    }
+    END { note() }' >"$rows.notes"
+
 grep -v '^SUMMARY ' "$rows.names" || true
+cat "$rows.notes"
 dups=$(awk '/^SUMMARY / { print $2 }' "$rows.names")
 echo "Skill audit: $total skill entries in $folders folders, $dups duplicate group(s)"
 if [[ "$dups" -gt 0 ]]; then
-    echo "Remove the extra copy: remove the agent from that SKILL_SETS entry in setup-agents, or the plugin from CLAUDE_PLUGINS."
+    echo "Remove one copy: a SKILL_SETS entry in setup-agents, or a plugin in CLAUDE_PLUGINS."
     [[ "${AUDIT_SKILLS_STRICT:-}" == "1" ]] && exit 1
 fi
 exit 0
