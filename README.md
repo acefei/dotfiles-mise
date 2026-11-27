@@ -211,7 +211,7 @@ The key comes from one of two places:
   it. The first `secrets init` makes you type `BACKED-UP`, so this step needs a terminal.
 
 The model tests call the NVIDIA API once per model, so they run only in CI or with `PI_TEST_MODELS=1`, each
-with a limit of `PI_MODEL_TEST_TIMEOUT` seconds (default 600; free models can take minutes) where `timeout` exists. They test the models in your effective `~/.pi/agent/settings.json`,
+with a 180 s limit where `timeout` exists. They test the models in your effective `~/.pi/agent/settings.json`,
 print `PASS` or `FAIL` per model, and fail if one model fails; with no key they are skipped. Run Pi with the
 stored key: `secrets exec -- pi`.
 
