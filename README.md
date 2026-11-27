@@ -230,10 +230,10 @@ dependency `@ast-grep/cli`; Pi still starts. In Pi, `/lens-tools` shows which to
 
 #### Lint config for pi-lens
 
-`pi-lens` installs `shellcheck` and `shfmt` itself (downloaded to `~/.pi-lens/bin`) and `ruff` through
-`pipx` or a private venv, so `config/mise/tools.toml` does not list them. On Ubuntu the private venv
-has no `pip`, so `ruff` is not installed there unless `pipx` is on the PATH; if Python lint matters
-to you, add `ruff = "latest"` to the tools file.
+`pi-lens` installs `shellcheck` and `shfmt` itself (downloaded to `~/.pi-lens/bin`), so
+`config/mise/tools.toml` does not list them. It cannot install `ruff` on Ubuntu: its private venv has no
+`pip`, and `pipx` does not help (both checked on Ubuntu 26.04). So `ruff` comes from the tools file, and
+`pi-lens` uses the one on the PATH.
 
 `pi-lens` looks for `ruff.toml`, `.shellcheckrc` and `.editorconfig` from the edited file up to and
 including `$HOME`, and uses its own rules only when it finds none. The Pi step therefore links three
