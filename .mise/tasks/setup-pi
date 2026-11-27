@@ -17,13 +17,13 @@ PI_PACKAGES=(
     "npm:context-mode@2.2.4"       # saves context window (license: Elastic-2.0)
 )
 
-install_pi() {
-    if command -v pi &>/dev/null; then
-        return 0
+# pi comes from config/mise/tools.toml (npm package), like claude. Without it there is
+# nothing to configure.
+require_pi() {
+    if ! pi --version &>/dev/null; then
+        echo "pi not found. Run: mise install" >&2
+        return 1
     fi
-    echo "Pi not installed. Installing..."
-    curl -fsSL https://pi.dev/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
 }
 
 # Pi rewrites settings.json from its own commands (/model, /settings), so the repo
@@ -31,6 +31,8 @@ install_pi() {
 seed_settings() {
     install -d "$PI_AGENT_DIR"
     copy_once "$PI_SEED" "$PI_AGENT_DIR/settings.json"
+    # pi-fff: do not index the whole home folder when Pi starts there.
+    copy_once "$MISE_PROJECT_ROOT/agents/pi/pi-fff.json" "$PI_AGENT_DIR/pi-fff.json"
 }
 
 # Install every package in PI_PACKAGES that `pi list` does not show yet. A failed install
@@ -99,8 +101,8 @@ check_models() {
 }
 
 echo "Setting up the Pi coding agent..."
-install_pi
-echo "Pi is installed: $(pi --version)"
+require_pi
+echo "Pi version: $(pi --version)"
 seed_settings
 install_packages
 check_models

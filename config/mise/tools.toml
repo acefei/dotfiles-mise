@@ -8,17 +8,28 @@
 [tools]
 # Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
 age       = "latest"
+bat       = "latest"  # cat with syntax highlighting; also pretty previews in fzf
+delta     = "latest"  # readable git diffs
+direnv    = "latest"  # per-directory environment
+fd        = "latest"  # fast find
 fzf       = "latest"
 gh        = "latest"
 go        = "latest"
+herdr     = "latest"  # terminal workspace that runs several coding agents side by side
 jq        = "latest"  # JSON processor; used by the speak-aloud plugin's Stop hook
+just      = "latest"  # command runner
+lazygit   = "latest"  # git terminal UI
 node      = "lts"
 ripgrep   = "latest"
+ruff      = "latest"  # Python lint and format; Pi's pi-lens uses it for .py files
 rust      = "stable"
+shellcheck = "latest" # shell lint; pi-lens uses it for .sh files
+shfmt     = "latest"  # shell format
 sops      = "latest"
 terraform = "latest"
 usage     = "latest"  # required for mise completions
 uv        = "latest"
+yq        = "latest"  # YAML processor
 
 # github: — any GitHub repo publishing release binaries; mise picks the right
 # asset for your OS/arch. https://mise.jdx.dev/dev-tools/backends/github.html
@@ -27,6 +38,7 @@ uv        = "latest"
 # npm: — global npm packages (requires node above).
 # https://mise.jdx.dev/dev-tools/backends/npm.html
 "npm:@anthropic-ai/claude-code" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"  # the `pi` coding agent
 
 [env]
 PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"

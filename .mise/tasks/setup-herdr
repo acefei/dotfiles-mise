@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#MISE description="Configure Herdr and connect it to Claude Code and Pi"
+#MISE depends=["setup-agents", "setup-pi"]
+set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+if ! command -v herdr &>/dev/null; then
+    echo "herdr not found. Run: mise install" >&2
+    exit 1
+fi
+
+install -d "$HOME/.config/herdr"
+# Herdr only reads this file, so link it.
+link_config "$MISE_PROJECT_ROOT/config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+herdr config check </dev/null
+
+# The integrations make each agent report working / idle / blocked to Herdr's sidebar.
+# They write a Pi extension and a Claude Code hook, and are safe to run again.
+# An agent that is not installed is skipped.
+# Both agents must have their config folder first: the Pi step fails without extensions/.
+install -d "$HOME/.pi/agent/extensions" "$HOME/.claude"
+for agent in pi claude; do
+    if command -v "$agent" &>/dev/null; then
+        echo "Connecting Herdr to $agent"
+        herdr integration install "$agent" </dev/null
+    else
+        echo "$agent not installed, skipping its Herdr integration"
+    fi
+done
+echo "Herdr ready. Start it with: herdr   (parallel agents: xs-agents --help)"

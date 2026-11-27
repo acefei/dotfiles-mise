@@ -1,0 +1,13 @@
+# Python lint and format. Linked to ~/.config/ruff/ruff.toml by `mise run setup-lint`.
+# ruff reads this only when a project has no ruff.toml, .ruff.toml or [tool.ruff] of its own.
+# pi-lens does NOT read it: for Pi's diagnostics put a ruff.toml in the repo.
+line-length = 100
+
+[lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # import order
+    "B",       # likely bugs
+    "UP",      # outdated syntax
+]

@@ -169,8 +169,8 @@ for the current figure before you add a plugin.
 
 ### Pi Coding Agent (NVIDIA NIM)
 
-`mise run setup-pi` installs [Pi](https://github.com/earendil-works/pi) if it is missing,
-seeds `~/.pi/agent/settings.json` once from `agents/pi/settings.json`, and tests every model
+[Pi](https://github.com/earendil-works/pi) comes from `config/mise/tools.toml` (`mise install`).
+`mise run setup-pi` seeds `~/.pi/agent/settings.json` (and `pi-fff.json`) once from `agents/pi/`, installs the extensions, and tests every model
 in its `enabledModels` when a key is available. Pi rewrites its settings file itself
 (`/model`, `/settings`), so the task never overwrites it. To take a new model list from the
 repo, delete `~/.pi/agent/settings.json` and run the task again.
@@ -221,6 +221,36 @@ mise run setup-secrets      # store the key (asks on a terminal)
 mise run setup-pi           # install Pi, seed settings, test the models
 secrets exec -- pi          # run Pi with the key from the store
 ```
+
+### Herdr: the workspace for parallel agents
+
+[Herdr](https://herdr.dev) is a terminal workspace that shows many coding agents side by side and
+tells you which one waits for you. `mise run setup-herdr` links `config/herdr/config.toml` to
+`~/.config/herdr/`, checks it with `herdr config check`, and installs the Herdr integrations for
+Pi and Claude Code (a Pi extension and a Claude hook; both report working, idle or blocked).
+mise installs and updates Herdr, so the config turns off `herdr update`.
+
+Start it with `herdr`. For several tasks at once, from a shell inside Herdr:
+
+```bash
+cd ~/xenserver-repo
+xs-agents -k claude private/feis/fix-a private/feis/fix-b   # one worktree + agent + build shell each
+xs-agents -k pi private/feis/spike-c
+```
+
+`xs-agents` (in `utility/`) makes a git worktree and a Herdr workspace per branch, starts the
+agent in the first pane, and leaves a second pane for builds. Your main checkout stays untouched.
+Remove a finished one with `herdr worktree remove`. Herdr reopens Pi and Claude Code panes in their
+own conversation after a restart (`resume_agents_on_restore`).
+
+### Lint and editor config
+
+`mise run setup-lint` links `config/lint/` to the places the tools read:
+`~/.config/ruff/ruff.toml`, `~/.shellcheckrc` and `~/.editorconfig`. A project's own file always
+wins. `pi-lens` (Pi's diagnostics) does not use the user-level ruff file: it looks for `ruff.toml`
+and `.shellcheckrc` from the edited file up to `$HOME`, and otherwise uses its own rules. So put the
+rules you want Pi to enforce in each repo. The tools (`ruff`, `shellcheck`, `shfmt`, and others) come
+from `config/mise/tools.toml`.
 
 ### Skills (Claude Code + Pi)
 

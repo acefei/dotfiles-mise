@@ -1,0 +1,23 @@
+# Herdr config. Linked to ~/.config/herdr/config.toml by `mise run setup-herdr`.
+# Check it with: herdr config check. Reload a running server: herdr server reload-config.
+# Every other key keeps Herdr's default (herdr --default-config lists them).
+
+[theme]
+name = "tokyo-night"
+
+[update]
+# mise installs and updates herdr (config/mise/tools.toml); `herdr update` would fight it.
+version_check = false
+
+[ui]
+# Agents that wait for you come first in the sidebar, with distinct symbols per state.
+agent_panel_sort = "priority"
+status_indicators = "symbols"
+
+[session]
+# After a server restart, reopen Pi and Claude Code panes in their own conversation.
+resume_agents_on_restore = true
+
+[experimental]
+# Stores pane screen text on disk; it can hold secrets.
+pane_history = false

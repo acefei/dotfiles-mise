@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Link the user-level lint and editor config (ruff, shellcheck, editorconfig)"
+set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+# The tools read these files and never write them, so link: a change in the repo is live at once.
+# A project's own file always wins, so nothing here forces a style on someone else's repo.
+install -d "$HOME/.config/ruff"
+link_config "$MISE_PROJECT_ROOT/config/lint/ruff.toml" "$HOME/.config/ruff/ruff.toml"
+link_config "$MISE_PROJECT_ROOT/config/lint/shellcheckrc" "$HOME/.shellcheckrc"
+link_config "$MISE_PROJECT_ROOT/config/lint/editorconfig" "$HOME/.editorconfig"
+
+# pi-lens (Pi) looks for ruff.toml and .shellcheckrc from the edited file up to $HOME, and
+# falls back to its own rules, not to the files above. Put project rules in the repo.
+echo "Lint config linked. For Pi's diagnostics, keep ruff.toml / .shellcheckrc in each repo."
