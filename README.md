@@ -202,7 +202,6 @@ package before you raise its version.
 | `pi-subagents` | Delegate work to sub-agents |
 | `@ff-labs/pi-fff` | Fast fuzzy file and content search |
 | `context-mode` | Saves context window (license: Elastic-2.0, not an OSI open-source license) |
-| `pi-mcp-adapter` | MCP servers. Pi turns its built-in MCP off when this one loads |
 
 npm 11 holds back the install script of the dependency `@ast-grep/cli`. Pi still starts. In
 Pi, `/lens-tools` shows which tools `pi-lens` found.

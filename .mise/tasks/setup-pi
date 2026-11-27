@@ -15,7 +15,6 @@ PI_PACKAGES=(
     "npm:pi-subagents@0.90.0"      # delegate work to sub-agents
     "npm:@ff-labs/pi-fff@0.11.0"   # fast fuzzy file and content search
     "npm:context-mode@2.2.4"       # saves context window (license: Elastic-2.0)
-    "npm:pi-mcp-adapter@7.0.1"     # MCP servers; Pi turns its built-in MCP off when this loads
 )
 
 install_pi() {
