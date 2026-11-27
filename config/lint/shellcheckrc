@@ -1,5 +1,0 @@
-# shellcheck options. Linked to ~/.shellcheckrc by `mise run setup-lint`.
-# A .shellcheckrc in a project (or a parent folder) wins over this file.
-shell=bash
-external-sources=true
-source-path=SCRIPTDIR

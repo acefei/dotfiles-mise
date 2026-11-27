@@ -16,8 +16,5 @@ depends     = [
     "setup-vim",
     "setup-utility",
     "setup-agents",
-    "setup-pi",
-    "setup-lint",
     "setup-herdr",
-    "audit-skills",
 ]

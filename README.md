@@ -22,7 +22,8 @@ dotfiles/
 ├── mise.toml                    # Tools, env vars, and simple tasks
 ├── install.sh                   # Fresh-machine bootstrap entry point
 ├── lib/
-│   └── utils.sh                 # Shared bash helpers (is_mac, download, …)
+│   ├── utils.sh                 # Shared bash helpers (is_mac, download, …)
+│   └── agents/                  # One file per agent step of setup-agents
 ├── shell/
 │   ├── profile                  # Interactive shell setup, sourced from ~/.bash_profile
 │   ├── dynamic_source_all       # Sources every shell/_* file at login
@@ -35,11 +36,12 @@ dotfiles/
 ├── config/
 │   ├── mise/tools.toml          # Tools + env, linked to ~/.config/mise/config.toml
 │   ├── git/                     # gitconfig, gitignore_global
+│   ├── herdr/                   # config.toml
 │   ├── tmux/                    # tmux.conf
 │   └── vim/                     # vimrc, plug_installer
 ├── agents/
 │   ├── claude/                  # settings.json, CLAUDE.md
-│   ├── pi/                      # settings.json (seed for the Pi agent)
+│   ├── pi/                      # settings.json, pi-fff.json, lint/ (ruff, shellcheck, editorconfig)
 │   └── vscode/                  # settings.json, keybindings.json, extensions.txt
 ├── utility/                     # Scripts symlinked to ~/.local/bin
 ├── templates/                   # Cloud-init and Docker starter files
@@ -61,8 +63,9 @@ secrets set GITHUB_TOKEN      # prompts, input hidden
 secrets exec -- claude        # only that process sees the values
 ```
 
-`secrets exec` reads the store directly, so nothing is injected into your shell
-just by entering a directory. Full reference: [docs/secrets.md](docs/secrets.md).
+`secrets export --format dotenv` writes the store as a `.env` file and `secrets import FILE` reads one
+back, so a store moves between machines without retyping. `secrets exec` reads the store directly, so
+nothing is injected into your shell just by entering a directory. Full reference: [docs/secrets.md](docs/secrets.md).
 
 ## Philosophy
 
@@ -146,13 +149,22 @@ mise run bootstrap          # all of them, in parallel
 
 ## AI agent settings
 
-### Claude Code + VSCode
+`mise run setup-agents` is the one task for every agent. It runs these steps in order and
+reports each step that failed, but always runs the audit last:
 
-`mise run setup-agents` sets up Claude Code and VSCode together. To change which
-marketplaces or plugins you get, edit the lists at the top of
-`.mise/tasks/setup-agents`.
+| Step | Source | What it does |
+| --- | --- | --- |
+| VSCode | `lib/agents/vscode.sh`, `agents/vscode/` | Seeds settings and keybindings once, installs the extensions |
+| Claude Code | `lib/agents/claude.sh`, `agents/claude/` | Seeds settings, links `CLAUDE.md`, registers the marketplace, installs the plugins |
+| Pi | `lib/agents/pi.sh`, `agents/pi/` | Seeds settings, links the lint files, installs the extensions, tests the models |
+| Skills | `lib/agents/skills.sh` | Installs standalone skills for the agents each entry names |
+| Audit | `lib/agents/audit.sh` | Reports a skill installed twice for one agent |
 
-#### Claude Code plugins (from `acefei/agent-accelerator`)
+A tool that is not installed is skipped with a message. Change what gets installed by editing the
+lists at the top of the matching file: `CLAUDE_MARKETPLACES` and `CLAUDE_PLUGINS`, `PI_PACKAGES`,
+`SKILL_SETS`. The task depends on `setup-secrets`, which asks for the NVIDIA key (see Pi).
+
+### Claude Code plugins (from `acefei/agent-accelerator`)
 
 | Plugin | For | Context |
 | --- | --- | --- |
@@ -162,17 +174,18 @@ marketplaces or plugins you get, edit the lists at the top of
 | `simple-english` | ASD-STE100 writing skill + `simple-english` output style | ~150 tok |
 | `gh-skills` | `gh` and `gh-skill` skills from `cli/cli` | ~90 tok |
 
-Context cost is paid in **every** session — run `claude plugin details <plugin>`
-for the current figure before you add a plugin.
-
-**VSCode** — settings, keybindings, and `extensions.txt` in `agents/vscode/`.
+Context cost is paid in **every** session. Run `claude plugin details <plugin>` for the current
+figure before you add a plugin. Plugins go to Claude Code only. `claude` comes from
+`config/mise/tools.toml`; when mise installs it without its postinstall, the task runs the
+postinstall once. Claude Code rewrites `settings.json`, so it is seeded once. A `CLAUDE.md` you
+already have keeps its text and gets one `@import` line for the repo file.
 
 ### Pi Coding Agent (NVIDIA NIM)
 
 [Pi](https://github.com/earendil-works/pi) comes from `config/mise/tools.toml` (`mise install`).
-`mise run setup-pi` seeds `~/.pi/agent/settings.json` (and `pi-fff.json`) once from `agents/pi/`, installs the extensions, and tests every model
-in its `enabledModels` when a key is available. Pi rewrites its settings file itself
-(`/model`, `/settings`), so the task never overwrites it. To take a new model list from the
+The Pi step seeds `~/.pi/agent/settings.json` and `pi-fff.json` once from `agents/pi/`, installs the
+extensions, and tests every model in `enabledModels` when a key is available. Pi rewrites its settings
+file itself (`/model`, `/settings`), so the task never overwrites it. To take a new model list from the
 repo, delete `~/.pi/agent/settings.json` and run the task again.
 
 | Setting | Value | Why |
@@ -190,112 +203,92 @@ Pi sends no thinking parameter to NVIDIA models (checked with a local test serve
 is the same at `medium` and `high`), so the level changes what Pi shows and allows, not the
 request. The models reason on their own.
 
-#### Extensions
-
-`setup-pi` installs these Pi packages (the list `PI_PACKAGES` at the top of
-`.mise/tasks/setup-pi`). The versions are exact. Each package runs code inside Pi, so read a
-package before you raise its version.
-
-| Package | For |
-| --- | --- |
-| `pi-lens` | Diagnostics from language servers and linters after each edit; blockers must be fixed first |
-| `pi-web-access` | Web search, URL fetch, PDF and YouTube |
-| `pi-subagents` | Delegate work to sub-agents |
-| `@ff-labs/pi-fff` | Fast fuzzy file and content search |
-| `context-mode` | Saves context window (license: Elastic-2.0, not an OSI open-source license) |
-
-npm 11 holds back the install script of the dependency `@ast-grep/cli`. Pi still starts. In
-Pi, `/lens-tools` shows which tools `pi-lens` found.
-
 The key comes from one of two places:
 
 - **The environment**: `NVIDIA_API_KEY`. Use it in CI or for a one-off run.
 - **The secrets store**: `mise run setup-secrets` asks for the key (input hidden) and stores
   it. The first `secrets init` makes you type `BACKED-UP`, so this step needs a terminal.
 
-With no key, `setup-pi` skips the model tests and still succeeds. With a key, it prints
-`PASS` or `FAIL` for each model and fails if one model fails.
+With no key, the model tests are skipped and the task still succeeds. With a key, it prints `PASS` or
+`FAIL` for each model and fails if one model fails. Run Pi with the stored key: `secrets exec -- pi`.
 
-```bash
-mise run setup-secrets      # store the key (asks on a terminal)
-mise run setup-pi           # install Pi, seed settings, test the models
-secrets exec -- pi          # run Pi with the key from the store
-```
+#### Extensions
+
+The list is `PI_PACKAGES` in `lib/agents/pi.sh`. The versions are exact. Each package runs code
+inside Pi, so read a package before you raise its version.
+
+| Package | For |
+| --- | --- |
+| `pi-lens` | Diagnostics from language servers and linters after each edit; blockers must be fixed first |
+| `pi-web-access` | Web search, URL fetch, PDF and YouTube; keyless search unless you add a provider key to `~/.pi/agent/web-search.json` |
+| `pi-subagents` | Delegate work to sub-agents |
+| `@ff-labs/pi-fff` | Fast fuzzy file and content search; the seed turns off scanning of the whole home folder |
+| `context-mode` | Saves context window (license: Elastic-2.0, not an OSI open-source license) |
+
+All except the `pi-fff` seed run with their defaults. npm 11 holds back the install script of the
+dependency `@ast-grep/cli`; Pi still starts. In Pi, `/lens-tools` shows which tools `pi-lens` found.
+
+#### Lint config for pi-lens
+
+`pi-lens` installs `shellcheck` and `shfmt` itself (downloaded to `~/.pi-lens/bin`) and `ruff` through
+`pipx` or a private venv, so `config/mise/tools.toml` does not list them. On Ubuntu the private venv
+has no `pip`, so `ruff` is not installed there unless `pipx` is on the PATH; if Python lint matters
+to you, add `ruff = "latest"` to the tools file.
+
+`pi-lens` looks for `ruff.toml`, `.shellcheckrc` and `.editorconfig` from the edited file up to and
+including `$HOME`, and uses its own rules only when it finds none. The Pi step therefore links three
+files from `agents/pi/lint/` into your home folder, and they apply to every project under it that
+has no file of its own:
+
+| Home file | From | Rules |
+| --- | --- | --- |
+| `~/ruff.toml` | `agents/pi/lint/ruff.toml` | The `[tool.ruff]` rules of `acefei/xenserver-mcp` (`pyproject.toml`); no repo of `acefei` has a `ruff.toml` file |
+| `~/.shellcheckrc` | `agents/pi/lint/shellcheckrc` | bash, follow `source` |
+| `~/.editorconfig` | `agents/pi/lint/editorconfig` | utf-8, LF, final newline, 4 spaces (2 for YAML, JSON, TOML, Markdown), tabs in Makefiles |
+
+### Skills (Claude Code + Pi)
+
+Standalone skills come from the pinned [`skills`](https://github.com/vercel-labs/skills) CLI, once per
+entry in `SKILL_SETS` (`lib/agents/skills.sh`). Each entry is `"<agents> <repo>@<commit> <skill> ..."`,
+where `agents` is `claude-code`, `pi`, or `claude-code,pi`; the commit pins the content. Each skill is on
+disk once, in `~/.agents/skills` (Pi reads it), and `~/.claude/skills` links to the same folders. The
+CLI telemetry is turned off. The default entry gives `grilling` and `grill-me` to Pi only, because Claude
+already gets them from the `mattpocock-skills` plugin.
+
+### Skill audit
+
+The last step lists a skill that is installed twice. It judges per agent, because an agent loads only its
+own folders (Claude: `~/.claude/skills` and enabled plugins; Pi: `~/.agents/skills` and Pi packages). It
+reports a skill name in two different folders for **one** agent, for example a standalone skill that a
+Claude plugin also ships. Symlinks to the same folder are not duplicates. The same skill once for Claude
+(plugin) and once for Pi is only a note, because each agent needs its own copy. The audit warns;
+`AUDIT_SKILLS_STRICT=1` makes the task fail, and CI sets it.
 
 ### Herdr: the workspace for parallel agents
 
 [Herdr](https://herdr.dev) is a terminal workspace that shows many coding agents side by side and
-tells you which one waits for you. `mise run setup-herdr` links `config/herdr/config.toml` to
-`~/.config/herdr/`, checks it with `herdr config check`, and installs the Herdr integrations for
-Pi and Claude Code (a Pi extension and a Claude hook; both report working, idle or blocked).
-mise installs and updates Herdr, so the config turns off `herdr update`.
+tells you which one waits for you. `mise run setup-herdr` runs after `setup-agents`. It links
+`config/herdr/config.toml` to `~/.config/herdr/`, checks it with `herdr config check`, and installs the
+Herdr integrations for Pi and Claude Code (a Pi extension and a Claude hook, so both report working,
+idle or blocked). You start Herdr yourself with `herdr`.
 
-Start it with `herdr`. For several tasks at once, from a shell inside Herdr:
+| Key | Value | Why |
+| --- | --- | --- |
+| `theme.name` | `tokyo-night` | Dark theme |
+| `update.version_check` | `false` | mise installs and updates Herdr; `herdr update` would fight it |
+| `ui.agent_panel_sort` | `priority` | Agents that wait for you come first in the sidebar |
+| `ui.status_indicators` | `symbols` | A distinct symbol per agent state |
+| `session.resume_agents_on_restore` | `true` | Reopen Pi and Claude Code panes in their own conversation after a restart |
+| `experimental.pane_history` | `false` | Pane history on disk can hold secrets |
 
-```bash
-cd ~/xen-api                                                # any git checkout
-xs-agents -k claude private/feis/fix-a private/feis/fix-b   # one worktree + agent + build shell each
-xs-agents -k pi private/feis/spike-c
-```
-
-`xs-agents` (in `utility/`) makes a git worktree and a Herdr workspace per branch, starts the
-agent in the first pane, and leaves a second pane for builds. Your main checkout stays untouched.
-Herdr reopens Pi and Claude Code panes in their own conversation after a restart
-(`resume_agents_on_restore`).
-
-#### A working day on XenServer code, without VSCode
-
-| Step | In Herdr |
-| --- | --- |
-| Start a task | `xs-agents -k claude private/feis/<task>` in the repo; the sidebar shows one workspace per task |
-| Let the agent work | first pane; the sidebar marks the agent that waits for you, so you can switch to it |
-| Build and test | second pane of the same workspace (`make`, `opam`, `dune`, a XenRT submit, ...) |
-| Edit by hand | `vim` in the build pane (`setup-vim`), or ask the agent |
-| Review | `git diff` (uses `delta`) or `lazygit` in the build pane |
-| Finish | push from the worktree, then `herdr worktree remove` for that workspace |
-
-Pi's `pi-lens` runs `ruff` and `shellcheck` after each edit, so the agent sees lint errors
-without an editor. VSCode stays available (`setup-agents` still seeds it) for the cases where
-you want its debugger or language-server UI.
-
-Tested: workspaces, worktrees, the build pane and both agent kinds start and report their state in
-Herdr (Pi against a real `xen-api` clone; Claude Code against a local fake API, because the test host
-cannot reach Anthropic). Your own machine's Claude access decides whether the Claude agent can answer.
-
-### Lint and editor config
-
-`mise run setup-lint` links `config/lint/` to the places the tools read:
-`~/.config/ruff/ruff.toml`, `~/.shellcheckrc` and `~/.editorconfig`. A project's own file always
-wins. `pi-lens` (Pi's diagnostics) does not use the user-level ruff file: it looks for `ruff.toml`
-and `.shellcheckrc` from the edited file up to `$HOME`, and otherwise uses its own rules. So put the
-rules you want Pi to enforce in each repo (this repo does: `.shellcheckrc` and `.editorconfig` at the
-root link to `config/lint/`). `pi-web-access`, `pi-subagents`, `context-mode` and `pi-fff` run with their defaults, apart from the `pi-fff`
-seed. `pi-web-access` uses its keyless search unless you add a provider key to `~/.pi/agent/web-search.json`. The tools (`ruff`, `shellcheck`, `shfmt`, and others) come
-from `config/mise/tools.toml`.
-
-### Skills (Claude Code + Pi)
-
-`setup-agents` installs both. Marketplace plugins go to **Claude Code only**. Standalone skills go to the agents you name
-(**Claude Code, Pi, or both**): it runs the pinned
-[`skills`](https://github.com/vercel-labs/skills) CLI once per entry in `SKILL_SETS`. Each skill is on disk once, in `~/.agents/skills` (Pi reads it).
-`~/.claude/skills` holds links to the same folders. The CLI telemetry is turned off.
-
-To add skills, add a line `"<agents> <repo>@<commit> <skill> <skill>"` to `SKILL_SETS` in
-`.mise/tasks/setup-agents`. `agents` is `claude-code`, `pi`, or `claude-code,pi`. The commit pins
-the content.
-
-`mise run audit-skills` is the last step of `bootstrap` (it waits for `setup-agents` and `setup-pi`).
-It judges duplicates per agent, because an agent loads only its own folders (Claude: `~/.claude/skills`
-and enabled plugins; Pi: `~/.agents/skills` and Pi packages). It reports a skill name that sits in two
-different folders for **one** agent, for example a standalone skill that a Claude plugin also ships.
-Symlinks to the same folder are not duplicates. The same skill once for Claude (plugin) and once for
-Pi is only a note, since each agent needs its own copy; that is why `grilling` and `grill-me` go to Pi
-only by default. The audit warns; `AUDIT_SKILLS_STRICT=1` makes it fail (CI sets it).
+For one task per branch, `herdr worktree create --cwd <repo> --branch <name>` makes a git worktree and a
+workspace for it, so your main checkout stays untouched; `herdr worktree remove` cleans up. `herdr --help`
+and `herdr --default-config` list every command and key.
 
 ## Development
 
 ```bash
 mise run bootstrap          # Full setup
-mise run setup-pi           # Pi only
-mise run setup-agents       # Claude + VSCode only
+mise run setup-agents       # VSCode, Claude Code, Pi, skills, audit
+mise run setup-herdr        # Herdr config and integrations
 ```

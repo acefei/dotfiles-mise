@@ -1,6 +1,3 @@
-# Editor settings that editors, shfmt and many linters read.
-# Linked to ~/.editorconfig by `mise run setup-lint`. A project .editorconfig with
-# root = true replaces it.
 root = true
 
 [*]

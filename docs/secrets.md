@@ -32,6 +32,20 @@ eval "$(secrets export)"          # or load into this shell
 `export` takes `--file` to select names from a template, `--format
 shell|dotenv|json`, and `--on-missing throw|empty|keep`.
 
+## Export and import a `.env` file
+
+```bash
+secrets export --format dotenv > backup.env    # plaintext: protect it, delete it after use
+secrets import backup.env                      # or: secrets import < backup.env
+secrets import --skip-existing other.env       # keep the values already in the store
+```
+
+`export --format dotenv` quotes a value that holds a space, a quote, a backslash or a newline, so
+`import` restores every value exactly. `import` reads `KEY=VALUE` lines, an optional `export ` prefix,
+`#` comments, and single- or double-quoted values (`\n` and `\"` work inside double quotes). A line
+that is not `KEY=VALUE` stops the import with its line number; an empty value is skipped, as in
+`secrets set`. By default an existing name is overwritten. The output lists names, never values.
+
 ## Scope
 
 `secrets exec` reads the store directly through sops. The store is **not**
