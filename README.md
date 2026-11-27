@@ -192,7 +192,7 @@ repo, delete `~/.pi/agent/settings.json` and run the task again.
 | Setting | Value | Why |
 | --- | --- | --- |
 | `defaultModel` | `nvidia/nemotron-3-ultra-550b-a55b` | The largest free model (550B, 1M context) |
-| `enabledModels` | the two free Nemotron models of build.nvidia.com (Ultra and Super VL), `moonshotai/kimi-k3.1-pro`, `minimaxai/minimax-m3.1-flash`, and `z-ai/glm-5.3-flash` | Cycle with Ctrl+P |
+| `enabledModels` | the two free Nemotron models of build.nvidia.com (Ultra and Super VL), `moonshotai/kimi-k3.1-pro`, and `minimaxai/minimax-m3.1-flash` | Cycle with Ctrl+P |
 | `defaultThinkingLevel` | `high` | Pi's default is `medium` |
 
 NVIDIA serves `moonshotai/kimi-k3.1-pro`, but Pi's built-in catalog does not list it yet. Pi
