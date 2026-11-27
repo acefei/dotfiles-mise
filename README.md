@@ -189,6 +189,24 @@ Pi sends no thinking parameter to NVIDIA models (checked with a local test serve
 is the same at `medium` and `high`), so the level changes what Pi shows and allows, not the
 request. The models reason on their own.
 
+#### Extensions
+
+`setup-pi` installs these Pi packages (the list `PI_PACKAGES` at the top of
+`.mise/tasks/setup-pi`). The versions are exact. Each package runs code inside Pi, so read a
+package before you raise its version.
+
+| Package | For |
+| --- | --- |
+| `pi-lens` | Diagnostics from language servers and linters after each edit; blockers must be fixed first |
+| `pi-web-access` | Web search, URL fetch, PDF and YouTube |
+| `pi-subagents` | Delegate work to sub-agents |
+| `@ff-labs/pi-fff` | Fast fuzzy file and content search |
+| `context-mode` | Saves context window (license: Elastic-2.0, not an OSI open-source license) |
+| `pi-mcp-adapter` | MCP servers. Pi turns its built-in MCP off when this one loads |
+
+npm 11 holds back the install script of the dependency `@ast-grep/cli`. Pi still starts. In
+Pi, `/lens-tools` shows which tools `pi-lens` found.
+
 The key comes from one of two places:
 
 - **The environment**: `NVIDIA_API_KEY`. Use it in CI or for a one-off run.

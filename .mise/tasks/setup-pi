@@ -7,6 +7,17 @@ source "$MISE_PROJECT_ROOT/lib/utils.sh"
 PI_AGENT_DIR="$HOME/.pi/agent"
 PI_SEED="$MISE_PROJECT_ROOT/agents/pi/settings.json"
 
+# Pi packages (extensions) to install. Exact versions: a pinned version never changes
+# under you. Each package runs code inside Pi, so read one before you raise its version.
+PI_PACKAGES=(
+    "npm:pi-lens@4.5.2"            # diagnostics after each edit; blockers must be fixed
+    "npm:pi-web-access@0.48.0"     # web search, URL fetch, PDF, YouTube
+    "npm:pi-subagents@0.90.0"      # delegate work to sub-agents
+    "npm:@ff-labs/pi-fff@0.11.0"   # fast fuzzy file and content search
+    "npm:context-mode@2.2.4"       # saves context window (license: Elastic-2.0)
+    "npm:pi-mcp-adapter@7.0.1"     # MCP servers; Pi turns its built-in MCP off when this loads
+)
+
 install_pi() {
     if command -v pi &>/dev/null; then
         return 0
@@ -23,6 +34,27 @@ seed_settings() {
     install -d "$PI_AGENT_DIR"
     copy_once "$PI_SEED" "$PI_AGENT_DIR/settings.json"
     copy_once "$MISE_PROJECT_ROOT/agents/pi/models.json" "$PI_AGENT_DIR/models.json"
+}
+
+# Install every package in PI_PACKAGES that `pi list` does not show yet. A failed install
+# does not stop the others, but the task fails at the end so that CI shows it.
+install_packages() {
+    local installed pkg failed=""
+    installed=$(pi list </dev/null 2>/dev/null | sed 's/^ *//' || true)
+    for pkg in "${PI_PACKAGES[@]}"; do
+        if grep -qxF "$pkg" <<<"$installed"; then
+            echo "Pi package already installed: $pkg"
+        elif pi install "$pkg" </dev/null; then
+            :
+        else
+            echo "Pi package failed to install: $pkg" >&2
+            failed="$failed $pkg"
+        fi
+    done
+    if [[ -n "$failed" ]]; then
+        echo "Failed:$failed" >&2
+        return 1
+    fi
 }
 
 # Test every model in enabledModels of the seed, so the list in the repo is the list
@@ -50,8 +82,9 @@ check_models() {
     while IFS= read -r model; do
         echo "--- $model"
         # One question per model, at the thinking level of the seed settings.
+        # --no-extensions: test the model alone, fast and the same on every machine.
         # </dev/null: pi -p waits on stdin when it is not a terminal.
-        if ${run[@]+"${run[@]}"} pi -p "Reply with OK." --no-session --model "$model" --thinking high </dev/null; then
+        if ${run[@]+"${run[@]}"} pi -p "Reply with OK." --no-session --no-extensions --model "$model" --thinking high </dev/null; then
             echo "PASS $model"
             passed=$((passed + 1))
         else
@@ -72,5 +105,6 @@ echo "Setting up the Pi coding agent..."
 install_pi
 echo "Pi is installed: $(pi --version)"
 seed_settings
+install_packages
 check_models
 echo "Pi setup complete"
