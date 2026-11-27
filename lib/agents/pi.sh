@@ -55,9 +55,9 @@ pi_check_models() {
     fi
     local run=() limit=()
     if command -v timeout &>/dev/null; then
-        limit=(timeout 180)
+        limit=(timeout 30)
     elif command -v gtimeout &>/dev/null; then
-        limit=(gtimeout 180)
+        limit=(gtimeout 30)
     fi
     local settings="$PI_AGENT_DIR/settings.json"
     [[ -f "$settings" ]] || settings="$PI_SEED"
