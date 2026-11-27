@@ -17,4 +17,5 @@ depends     = [
     "setup-utility",
     "setup-agents",
     "setup-pi",
+    "audit-skills",
 ]

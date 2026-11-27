@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#MISE description="Report skills that are installed twice (Claude plugins, ~/.claude/skills, ~/.agents/skills, Pi packages)"
+#MISE wait_for=["setup-agents", "setup-pi"]
+set -euo pipefail
+
+# Read-only. A skill counts once per real folder: a symlink to the same folder is not a
+# duplicate. Two different folders with the same skill name are reported. Set AUDIT_SKILLS_STRICT=1 to fail on them.
+
+rows=$(mktemp)
+trap 'rm -f "$rows" "$rows.names"' EXIT
+
+hash_file() {
+    if command -v sha256sum &>/dev/null; then
+        sha256sum "$1" | cut -d' ' -f1
+    else
+        shasum -a 256 "$1" | cut -d' ' -f1
+    fi
+}
+
+# The name in the SKILL.md frontmatter, else the folder name.
+skill_name() {
+    local name
+    name=$(awk 'NR == 1 && $0 != "---" { exit }
+                NR > 1 && $0 == "---" { exit }
+                /^name:/ { sub(/^name:[[:space:]]*/, ""); print; exit }' "$1/SKILL.md" | tr -d "\"'")
+    printf '%s' "${name:-$(basename "$1")}"
+}
+
+# add_skill <label> <folder>: record one skill folder if it holds a SKILL.md.
+add_skill() {
+    local label=$1 dir=${2%/} real
+    [[ -f "$dir/SKILL.md" ]] || return 0
+    real=$(cd "$dir" && pwd -P)
+    printf '%s\t%s\t%s\t%s\n' "$label" "$(skill_name "$dir")" "$(hash_file "$dir/SKILL.md")" "$real" >>"$rows"
+}
+
+add_children() {
+    local label=$1 base=$2 dir
+    [[ -d "$base" ]] || return 0
+    for dir in "$base"/*/; do
+        add_skill "$label" "$dir"
+    done
+}
+
+# Claude plugins that are enabled. claude plugin list gives the current install folder of each,
+# so old cached versions cannot cause a false report. A plugin.json "skills" list wins over
+# the default skills/ folder, as in Claude Code.
+audit_claude_plugins() {
+    if ! command -v claude &>/dev/null || ! command -v jq &>/dev/null; then
+        echo "claude or jq not found: Claude plugin skills are not audited"
+        return 0
+    fi
+    local id path manifest skill
+    while IFS=$'\t' read -r id path; do
+        manifest="$path/.claude-plugin/plugin.json"
+        if [[ -f "$manifest" ]] && [[ -n "$(jq -r '.skills[]? // empty' "$manifest")" ]]; then
+            while IFS= read -r skill; do
+                add_skill "claude-plugin:$id" "$path/${skill#./}"
+            done < <(jq -r '.skills[]?' "$manifest")
+        else
+            add_children "claude-plugin:$id" "$path/skills"
+        fi
+    done < <(claude plugin list --json 2>/dev/null \
+        | jq -r '.[] | select(.enabled == true and ((.installPath // "") != "")) | [.id, .installPath] | @tsv')
+}
+
+# Pi packages: pi list prints each package path on an indented line.
+audit_pi_packages() {
+    command -v pi &>/dev/null || return 0
+    local path
+    while IFS= read -r path; do
+        add_children "pi-package:$(basename "$path")" "$path/skills"
+    done < <(pi list </dev/null 2>/dev/null | sed -n 's/^    \(\/.*\)$/\1/p')
+}
+
+add_children "claude-skills" "$HOME/.claude/skills"
+add_children "agents-skills" "$HOME/.agents/skills"
+audit_claude_plugins
+audit_pi_packages
+
+total=$(wc -l <"$rows" | tr -d ' ')
+folders=$(cut -f4 "$rows" | sort -u | wc -l | tr -d ' ')
+
+# Same name in two different folders.
+sort -t$'\t' -k2,2 -k4,4 "$rows" | awk -F'\t' '
+    function flush(   i) {
+        if (n > 1) {
+            dup++
+            printf "DUPLICATE name: %s\n", cur
+            for (i = 1; i <= n; i++) printf "    %s\n      %s  sha256:%s\n", lab[i], dir[i], substr(h[i], 1, 12)
+        }
+        n = 0
+    }
+    {
+        if ($2 != cur) { flush(); cur = $2 }
+        if (n > 0 && dir[n] == $4) lab[n] = lab[n] ", " $1
+        else { n++; lab[n] = $1; dir[n] = $4; h[n] = $3 }
+    }
+    END { flush(); print "SUMMARY " dup + 0 }' >"$rows.names"
+
+grep -v '^SUMMARY ' "$rows.names" || true
+dups=$(awk '/^SUMMARY / { print $2 }' "$rows.names")
+echo "Skill audit: $total skill entries in $folders folders, $dups duplicate group(s)"
+if [[ "$dups" -gt 0 ]]; then
+    echo "Remove the extra copy: drop an agent from SKILL_AGENTS, or a plugin from CLAUDE_PLUGINS."
+    [[ "${AUDIT_SKILLS_STRICT:-}" == "1" ]] && exit 1
+fi
+exit 0

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Configure Claude Code and VSCode (settings, marketplaces, plugins, skills)"
+#MISE description="Configure Claude Code and VSCode (settings, marketplace plugins for Claude, skills for Claude and Pi)"
 source "$MISE_PROJECT_ROOT/lib/utils.sh"
 
 setup_vscode() {
@@ -125,5 +125,53 @@ setup_claude() {
     done
 }
 
+# Standalone skills for Claude Code AND Pi (the marketplace plugins above are Claude only).
+# pi reads ~/.agents/skills, and the skills CLI links ~/.claude/skills to the same files,
+# so each skill is on disk once. A plugin can still ship the same skill: audit-skills reports it.
+
+# The skills CLI runs code from npm: pin it.
+SKILLS_CLI="skills@1.9.1"
+
+SKILL_AGENTS=(claude-code pi)
+
+# "<repo>@<commit> <skill> <skill> ...". The commit pins the skills: raise it on purpose.
+SKILL_SETS=(
+    "mattpocock/skills@49dd158d1076134a641b33efb035946536778336 grilling grill-me"
+)
+
+# DISABLE_TELEMETRY / DO_NOT_TRACK: without them the CLI sends anonymous usage data and security-audit requests to skills.sh.
+
+install_skill_set() {
+    local entry=$1 source names name agent
+    source=${entry%% *}
+    names=${entry#* }
+    local args=()
+    for name in $names; do
+        args+=(--skill "$name")
+    done
+    for agent in "${SKILL_AGENTS[@]}"; do
+        args+=(-a "$agent")
+    done
+    echo "Installing skills from $source: $names"
+    DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 npx --yes "$SKILLS_CLI" add "$source" "${args[@]}" -g -y </dev/null
+}
+
+setup_skills() {
+    if ! command -v npx &>/dev/null; then
+        echo "npx not found, skipping skills"
+        return 0
+    fi
+    local entry failed=""
+    for entry in "${SKILL_SETS[@]}"; do
+        install_skill_set "$entry" || failed="$failed ${entry%% *}"
+    done
+    if [[ -n "$failed" ]]; then
+        echo "Failed to install skills from:$failed" >&2
+        return 1
+    fi
+    echo "Skills installed for: ${SKILL_AGENTS[*]}"
+}
+
 setup_vscode
 setup_claude
+setup_skills

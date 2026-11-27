@@ -222,6 +222,23 @@ mise run setup-pi           # install Pi, seed settings, test the models
 secrets exec -- pi          # run Pi with the key from the store
 ```
 
+### Skills (Claude Code + Pi)
+
+`setup-agents` installs both. Marketplace plugins go to **Claude Code only**. Standalone skills go to
+**Claude Code and Pi**: it runs the pinned
+[`skills`](https://github.com/vercel-labs/skills) CLI once per entry in `SKILL_SETS`, for the
+agents in `SKILL_AGENTS`. Each skill is on disk once, in `~/.agents/skills` (Pi reads it).
+`~/.claude/skills` holds links to the same folders. The CLI telemetry is turned off.
+
+To add skills, add a line `"<repo>@<commit> <skill> <skill>"` to `SKILL_SETS` in
+`.mise/tasks/setup-agents`. The commit pins the content.
+
+`mise run audit-skills` is the last step of `bootstrap` (it waits for `setup-agents` and `setup-pi`). It lists a skill that is installed twice:
+the same name in two different folders (for example a Claude plugin and `~/.agents/skills`),
+or the same `SKILL.md` under two names. It only warns; set `AUDIT_SKILLS_STRICT=1` to make it fail.
+The default `grilling` and `grill-me` are also in the `mattpocock-skills` plugin, so the audit
+reports them. Fix it by dropping that plugin from `CLAUDE_PLUGINS` or `claude-code` from `SKILL_AGENTS`.
+
 ## Development
 
 ```bash
