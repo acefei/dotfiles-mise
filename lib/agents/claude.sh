@@ -58,9 +58,8 @@ setup_claude() {
     for marketplace in "${CLAUDE_MARKETPLACES[@]}"; do
         echo "Registering Claude plugin marketplace: $marketplace"
         marketplace_name=$(printf '%s' "${marketplace##*/}" | tr '[:upper:]' '[:lower:]')
-        claude plugin marketplace add "$marketplace" \
-            || claude plugin marketplace update "$marketplace_name" \
-            || true
+        claude plugin marketplace add "$marketplace" || true
+        claude plugin marketplace update "$marketplace_name" || true
     done
 
     for plugin in "${CLAUDE_PLUGINS[@]}"; do

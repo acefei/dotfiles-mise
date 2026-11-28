@@ -264,8 +264,9 @@ The last step lists a skill that is installed twice. It judges per agent, becaus
 own folders (Claude: `~/.claude/skills` and enabled plugins; Pi: `~/.agents/skills` and Pi packages). It
 reports a skill name in two different folders for **one** agent, for example a standalone skill that a
 Claude plugin also ships. Symlinks to the same folder are not duplicates. The same skill once for Claude
-(plugin) and once for Pi is only a note, because each agent needs its own copy. A duplicate fails the task;
-the audit is mandatory and has no switch.
+(plugin) and once for Pi is only a note, because each agent needs its own copy. The audit runs on every
+`setup-agents`. A duplicate fails the task in CI (`CI=true`) and only warns on your own machine, so a skill you
+installed by hand does not block the setup.
 
 ### Herdr: the workspace for parallel agents
 

@@ -17,7 +17,7 @@ export EDITOR=vi
 
 eval "$(mise activate bash)"
 
-[[ -f ~/.local/share/bash-completion/bash_completion ]] && \
+(( BASH_VERSINFO[0] >= 5 )) && [[ -f ~/.local/share/bash-completion/bash_completion ]] && \
     source ~/.local/share/bash-completion/bash_completion
 
 # This repo, found from this file rather than baked in at install time.
