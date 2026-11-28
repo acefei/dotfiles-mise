@@ -1,0 +1,15 @@
+{
+	"$schema": "https://pi.dev/schemas/settings.schema.json",
+	"defaultProvider": "nvidia",
+	"defaultModel": "nvidia/nemotron-3-ultra-550b-a55b",
+	"defaultThinkingLevel": "high",
+	"enabledModels": [
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+		"nvidia/moonshotai/kimi-k3.1-pro",
+		"nvidia/minimaxai/minimax-m3.1-flash"
+	],
+	"defaultTools": [
+		"+codemode"
+	]
+}

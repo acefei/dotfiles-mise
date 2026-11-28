@@ -8,17 +8,26 @@
 [tools]
 # Built-in tools — full list: https://mise.jdx.dev/registry.html  (or: mise registry)
 age       = "latest"
+bat       = "latest"
+delta     = "latest"
+direnv    = "latest"
+fd        = "latest"
 fzf       = "latest"
 gh        = "latest"
 go        = "latest"
+herdr     = "latest"
 jq        = "latest"  # JSON processor; used by the speak-aloud plugin's Stop hook
+just      = "latest"
+lazygit   = "latest"
 node      = "lts"
 ripgrep   = "latest"
+ruff      = "latest"
 rust      = "stable"
 sops      = "latest"
 terraform = "latest"
 usage     = "latest"  # required for mise completions
 uv        = "latest"
+yq        = "latest"
 
 # github: — any GitHub repo publishing release binaries; mise picks the right
 # asset for your OS/arch. https://mise.jdx.dev/dev-tools/backends/github.html
@@ -27,6 +36,7 @@ uv        = "latest"
 # npm: — global npm packages (requires node above).
 # https://mise.jdx.dev/dev-tools/backends/npm.html
 "npm:@anthropic-ai/claude-code" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
 
 [env]
 PATH   = "{{env.HOME}}/.local/bin:{{env.PATH}}"

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Configure Herdr and connect it to Claude Code and Pi"
+#MISE depends=["setup-agents"]
+set -euo pipefail
+source "$MISE_PROJECT_ROOT/lib/utils.sh"
+
+if ! command -v herdr &>/dev/null; then
+    echo "herdr not found. Run: mise install" >&2
+    [[ "${CI:-}" != "true" ]]
+    exit $?
+fi
+
+install -d "$HOME/.config/herdr"
+link_config "$MISE_PROJECT_ROOT/config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+herdr config check </dev/null
+
+install -d "$HOME/.pi/agent/extensions" "$HOME/.claude"
+for agent in pi claude; do
+    if command -v "$agent" &>/dev/null; then
+        echo "Connecting Herdr to $agent"
+        herdr integration install "$agent" </dev/null
+    else
+        echo "$agent not installed, skipping its Herdr integration"
+    fi
+done
+echo "Herdr ready. Start it with: herdr"
