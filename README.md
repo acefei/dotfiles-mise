@@ -245,9 +245,9 @@ has no file of its own:
 
 | Home file | From | Rules |
 | --- | --- | --- |
-| `~/ruff.toml` | `agents/pi/lint/ruff.toml` | The `[tool.ruff]` rules of `acefei/xenserver-mcp` (`pyproject.toml`); no repo of `acefei` has a `ruff.toml` file |
+| `~/ruff.toml` | `agents/pi/lint/ruff.toml` | The `[tool.ruff]` rules of `acefei/xenserver-mcp` (`pyproject.toml`; no repo of `acefei` has a `ruff.toml` file), without `target-version` and `UP`: the pi-lens autofix would otherwise rewrite old-Python code (for example `Optional[int]` to `int \| None`) in every repo that has no config of its own. Put modernizing rules in the repos that target a new Python |
 | `~/.shellcheckrc` | `agents/pi/lint/shellcheckrc` | bash, follow `source` |
-| `~/.editorconfig` | `agents/pi/lint/editorconfig` | utf-8, LF, final newline, 4 spaces (2 for YAML, JSON, TOML, Markdown), tabs in Makefiles |
+| `~/.editorconfig` | `agents/pi/lint/editorconfig` | Shell scripts only (`*.sh`, `*.bash`): utf-8, LF, final newline, 4 spaces, for `shfmt`. No catch-all section, so editors do not reformat patches or tab-indented code in other repos |
 
 ### Skills (Claude Code + Pi)
 
