@@ -271,10 +271,13 @@ installed by hand does not block the setup.
 ### Herdr: the workspace for parallel agents
 
 [Herdr](https://herdr.dev) is a terminal workspace that shows many coding agents side by side and
-tells you which one waits for you. `mise run setup-herdr` runs after `setup-agents`. It links
-`config/herdr/config.toml` to `~/.config/herdr/`, checks it with `herdr config check`, and installs the
+tells you which one waits for you. `mise run setup-herdr` runs after `setup-agents`. It copies
+`config/herdr/config.toml` to `~/.config/herdr/` once, checks it with `herdr config check`, and installs the
 Herdr integrations for Pi and Claude Code (a Pi extension and a Claude hook, so both report working,
-idle or blocked). You start Herdr yourself with `herdr`.
+idle or blocked). Herdr rewrites its config (after the first-run screen it adds `onboarding = false`), so the
+file is a copy, not a link, and the task never overwrites it. To take new defaults from the repo, delete
+`~/.config/herdr/config.toml` and run the task again. A machine that still has the old link gets it replaced by a
+copy of the current content, and the repo file is restored. You start Herdr yourself with `herdr`.
 
 | Key | Value | Why |
 | --- | --- | --- |

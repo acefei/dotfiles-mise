@@ -10,8 +10,21 @@ if ! command -v herdr &>/dev/null; then
     exit $?
 fi
 
+herdr_config="$HOME/.config/herdr/config.toml"
+repo_config="$MISE_PROJECT_ROOT/config/herdr/config.toml"
+
 install -d "$HOME/.config/herdr"
-link_config "$MISE_PROJECT_ROOT/config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+if [[ -L "$herdr_config" && "$(readlink "$herdr_config")" == "$repo_config" ]]; then
+    echo "$herdr_config links to the repo; replacing the link with a copy of its content"
+    kept=$(mktemp)
+    cp "$repo_config" "$kept"
+    rm "$herdr_config"
+    install -m 644 "$kept" "$herdr_config"
+    rm -f "$kept"
+    git -C "$MISE_PROJECT_ROOT" checkout -- config/herdr/config.toml \
+        || echo "Could not restore $repo_config: run git checkout -- config/herdr/config.toml"
+fi
+copy_once "$repo_config" "$herdr_config"
 herdr config check </dev/null
 
 install -d "$HOME/.pi/agent/extensions" "$HOME/.claude"
